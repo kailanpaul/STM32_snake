@@ -1,0 +1,25 @@
+2023-04-14 10:34:41,626 [INFO] CtxDoc:743 - title: USB_OTG_FS; link: Datasheet 
+2023-04-14 10:34:41,633 [INFO] CtxDocViewerPdf:146 - Open pdf file: C:/Users/ktp21/STM32Cube/Repository/\DS8626.pdf in chapter: Universal serial bus on the go full speed (OTG_FS)
+2023-04-14 10:36:14,090 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,573x473,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2023-04-14 10:36:15,293 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2023-04-14 10:36:15,324 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,193 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,209 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,209 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:08,209 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:48,237 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:48,237 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:48,237 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:52,101 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:52,101 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:37:52,101 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-04-14 10:38:58,478 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,573x473,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2023-04-14 10:39:28,949 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 460759496 Bytes (717225984)
+2023-04-14 10:39:30,240 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 484781952 Bytes (717225984)
+2023-04-14 10:39:31,804 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 522004352 Bytes (717225984)
+2023-04-14 10:39:31,872 [INFO] ProjectBuilder:2308 - IP not ready for code generation: Clock
