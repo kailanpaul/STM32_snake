@@ -260,15 +260,11 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
+  /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-
-  memset(usb_in, '\0', 64); // clear buffer
-  uint8_t len = (uint8_t)*Len;
-  memcpy(usb_in, Buf, len); // copy to buffer
-  memset(Buf, '\0', len); // clear Buf
-
   return (USBD_OK);
+  /* USER CODE END 6 */
 }
 
 /**

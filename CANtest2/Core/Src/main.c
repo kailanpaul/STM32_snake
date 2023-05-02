@@ -48,7 +48,7 @@ int main(void)
 	txHeader.DLC = 8; // Number of bytes to be transmitted max- 8
 	txHeader.IDE = CAN_ID_STD;
 	txHeader.RTR = CAN_RTR_DATA;
-	txHeader.StdId = 0x0D;
+	txHeader.StdId = 0x08;
 	txHeader.ExtId = 0x02;
 	txHeader.TransmitGlobalTime = DISABLE;
 
@@ -165,12 +165,12 @@ static void MX_CAN1_Init(void)
 	hcan1.Init.Prescaler = 9;
 	hcan1.Init.Mode = CAN_MODE_NORMAL;
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_10TQ;
-	hcan1.Init.TimeSeg2 = CAN_BS2_5TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; //10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
 	hcan1.Init.TimeTriggeredMode = DISABLE;
 	hcan1.Init.AutoBusOff = DISABLE;
 	hcan1.Init.AutoWakeUp = DISABLE;
-	hcan1.Init.AutoRetransmission = DISABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
 	hcan1.Init.TransmitFifoPriority = DISABLE;
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)

@@ -73,6 +73,8 @@ int main(void)
 		Error_Handler();
 	}
 
+	uint16_t count = 0;
+
 	while (1)
 	{
 //		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
@@ -102,8 +104,17 @@ int main(void)
 			memset(usb_in, '\0', 64); // clear buffer
 		}
 
-		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-		HAL_Delay(1000);
+		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+		{
+			Error_Handler();
+		}
+		count++;
+		if (count == 1000){
+			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
+			count = 0;
+		}
+		HAL_Delay(1);
 	}
 
 }
@@ -197,12 +208,12 @@ static void MX_CAN1_Init(void)
 	hcan1.Init.Prescaler = 9;
 	hcan1.Init.Mode = CAN_MODE_NORMAL;
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_10TQ;
-	hcan1.Init.TimeSeg2 = CAN_BS2_5TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; //10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
 	hcan1.Init.TimeTriggeredMode = DISABLE;
 	hcan1.Init.AutoBusOff = DISABLE;
 	hcan1.Init.AutoWakeUp = DISABLE;
-	hcan1.Init.AutoRetransmission = DISABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
 	hcan1.Init.TransmitFifoPriority = DISABLE;
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)

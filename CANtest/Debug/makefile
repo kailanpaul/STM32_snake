@@ -64,8 +64,8 @@ all: main-build
 main-build: CANtest.elf secondary-outputs
 
 # Tool invocations
-CANtest.elf CANtest.map: $(OBJS) $(USER_OBJS) C:\Users\ktp21\STM32CubeIDE\workspace_1.12.0\CANtest\STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CANtest.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\ktp21\STM32CubeIDE\workspace_1.12.0\CANtest\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CANtest.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CANtest.elf CANtest.map: $(OBJS) $(USER_OBJS) C:\Users\ktp21\OneDrive\ -\ University\ of\ Canterbury\Masters\cube_workspace\CANtest\STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CANtest.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\ktp21\OneDrive - University of Canterbury\Masters\cube_workspace\CANtest\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CANtest.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

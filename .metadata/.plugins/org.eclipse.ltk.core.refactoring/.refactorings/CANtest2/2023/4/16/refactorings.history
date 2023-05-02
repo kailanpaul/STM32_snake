@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;CANtest2/CANtest.ioc&apos; to &apos;CANtest2.ioc&apos;" description="Rename resource &apos;CANtest.ioc&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="CANtest.ioc" name="CANtest2.ioc" stamp="1681706693948" updateReferences="true"/>
-</session>

@@ -425,9 +425,9 @@ int main(void)
  8000528:	4b18      	ldr	r3, [pc, #96]	; (800058c <main+0xc0>)
  800052a:	2200      	movs	r2, #0
  800052c:	60da      	str	r2, [r3, #12]
-	txHeader.StdId = 0x0D;
+	txHeader.StdId = 0x08;
  800052e:	4b17      	ldr	r3, [pc, #92]	; (800058c <main+0xc0>)
- 8000530:	220d      	movs	r2, #13
+ 8000530:	2208      	movs	r2, #8
  8000532:	601a      	str	r2, [r3, #0]
 	txHeader.ExtId = 0x02;
  8000534:	4b15      	ldr	r3, [pc, #84]	; (800058c <main+0xc0>)
@@ -731,51 +731,52 @@ static void MX_CAN1_Init(void)
  8000712:	4b13      	ldr	r3, [pc, #76]	; (8000760 <MX_CAN1_Init+0x64>)
  8000714:	2200      	movs	r2, #0
  8000716:	60da      	str	r2, [r3, #12]
-	hcan1.Init.TimeSeg1 = CAN_BS1_10TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; //10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
  8000718:	4b11      	ldr	r3, [pc, #68]	; (8000760 <MX_CAN1_Init+0x64>)
- 800071a:	f44f 2210 	mov.w	r2, #589824	; 0x90000
+ 800071a:	f44f 3280 	mov.w	r2, #65536	; 0x10000
  800071e:	611a      	str	r2, [r3, #16]
-	hcan1.Init.TimeSeg2 = CAN_BS2_5TQ;
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
  8000720:	4b0f      	ldr	r3, [pc, #60]	; (8000760 <MX_CAN1_Init+0x64>)
- 8000722:	f44f 0280 	mov.w	r2, #4194304	; 0x400000
- 8000726:	615a      	str	r2, [r3, #20]
+ 8000722:	2200      	movs	r2, #0
+ 8000724:	615a      	str	r2, [r3, #20]
 	hcan1.Init.TimeTriggeredMode = DISABLE;
- 8000728:	4b0d      	ldr	r3, [pc, #52]	; (8000760 <MX_CAN1_Init+0x64>)
- 800072a:	2200      	movs	r2, #0
- 800072c:	761a      	strb	r2, [r3, #24]
+ 8000726:	4b0e      	ldr	r3, [pc, #56]	; (8000760 <MX_CAN1_Init+0x64>)
+ 8000728:	2200      	movs	r2, #0
+ 800072a:	761a      	strb	r2, [r3, #24]
 	hcan1.Init.AutoBusOff = DISABLE;
- 800072e:	4b0c      	ldr	r3, [pc, #48]	; (8000760 <MX_CAN1_Init+0x64>)
- 8000730:	2200      	movs	r2, #0
- 8000732:	765a      	strb	r2, [r3, #25]
+ 800072c:	4b0c      	ldr	r3, [pc, #48]	; (8000760 <MX_CAN1_Init+0x64>)
+ 800072e:	2200      	movs	r2, #0
+ 8000730:	765a      	strb	r2, [r3, #25]
 	hcan1.Init.AutoWakeUp = DISABLE;
- 8000734:	4b0a      	ldr	r3, [pc, #40]	; (8000760 <MX_CAN1_Init+0x64>)
- 8000736:	2200      	movs	r2, #0
- 8000738:	769a      	strb	r2, [r3, #26]
-	hcan1.Init.AutoRetransmission = DISABLE;
- 800073a:	4b09      	ldr	r3, [pc, #36]	; (8000760 <MX_CAN1_Init+0x64>)
- 800073c:	2200      	movs	r2, #0
- 800073e:	76da      	strb	r2, [r3, #27]
+ 8000732:	4b0b      	ldr	r3, [pc, #44]	; (8000760 <MX_CAN1_Init+0x64>)
+ 8000734:	2200      	movs	r2, #0
+ 8000736:	769a      	strb	r2, [r3, #26]
+	hcan1.Init.AutoRetransmission = ENABLE;
+ 8000738:	4b09      	ldr	r3, [pc, #36]	; (8000760 <MX_CAN1_Init+0x64>)
+ 800073a:	2201      	movs	r2, #1
+ 800073c:	76da      	strb	r2, [r3, #27]
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
- 8000740:	4b07      	ldr	r3, [pc, #28]	; (8000760 <MX_CAN1_Init+0x64>)
- 8000742:	2200      	movs	r2, #0
- 8000744:	771a      	strb	r2, [r3, #28]
+ 800073e:	4b08      	ldr	r3, [pc, #32]	; (8000760 <MX_CAN1_Init+0x64>)
+ 8000740:	2200      	movs	r2, #0
+ 8000742:	771a      	strb	r2, [r3, #28]
 	hcan1.Init.TransmitFifoPriority = DISABLE;
- 8000746:	4b06      	ldr	r3, [pc, #24]	; (8000760 <MX_CAN1_Init+0x64>)
- 8000748:	2200      	movs	r2, #0
- 800074a:	775a      	strb	r2, [r3, #29]
+ 8000744:	4b06      	ldr	r3, [pc, #24]	; (8000760 <MX_CAN1_Init+0x64>)
+ 8000746:	2200      	movs	r2, #0
+ 8000748:	775a      	strb	r2, [r3, #29]
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)
- 800074c:	4804      	ldr	r0, [pc, #16]	; (8000760 <MX_CAN1_Init+0x64>)
- 800074e:	f000 fa0d 	bl	8000b6c <HAL_CAN_Init>
- 8000752:	4603      	mov	r3, r0
- 8000754:	2b00      	cmp	r3, #0
- 8000756:	d001      	beq.n	800075c <MX_CAN1_Init+0x60>
+ 800074a:	4805      	ldr	r0, [pc, #20]	; (8000760 <MX_CAN1_Init+0x64>)
+ 800074c:	f000 fa0e 	bl	8000b6c <HAL_CAN_Init>
+ 8000750:	4603      	mov	r3, r0
+ 8000752:	2b00      	cmp	r3, #0
+ 8000754:	d001      	beq.n	800075a <MX_CAN1_Init+0x5e>
 	{
 		Error_Handler();
- 8000758:	f000 f86a 	bl	8000830 <Error_Handler>
+ 8000756:	f000 f86b 	bl	8000830 <Error_Handler>
 	}
 }
- 800075c:	bf00      	nop
- 800075e:	bd80      	pop	{r7, pc}
+ 800075a:	bf00      	nop
+ 800075c:	bd80      	pop	{r7, pc}
+ 800075e:	bf00      	nop
  8000760:	20000028 	.word	0x20000028
  8000764:	40006400 	.word	0x40006400
 
