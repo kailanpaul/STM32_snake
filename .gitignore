@@ -1,1 +1,8 @@
 .metadata/
+*.o
+*.elf
+*.list
+*.map
+*.cyclo
+*.su
+*.d
