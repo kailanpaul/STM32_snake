@@ -73,6 +73,8 @@ int main(void)
 		Error_Handler();
 	}
 
+	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+
 	uint16_t count = 0;
 
 	while (1)
@@ -94,7 +96,7 @@ int main(void)
 		if(usb_in[0] == 'x')
 		{
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+//			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
 			{
 				Error_Handler();
@@ -104,17 +106,15 @@ int main(void)
 			memset(usb_in, '\0', 64); // clear buffer
 		}
 
-		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
-		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
-		{
-			Error_Handler();
-		}
-		count++;
-		if (count == 1000){
-			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-			count = 0;
-		}
-		HAL_Delay(1);
+//		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+//		{
+//			Error_Handler();
+//		}
+//		if (++count == 1000){
+//			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
+//			count = 0;
+//		}
+//		HAL_Delay(1);
 	}
 
 }
