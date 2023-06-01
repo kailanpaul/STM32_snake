@@ -3,39 +3,37 @@
 
 #include "stm32f4xx_hal.h"
 
-#define HEEPWRITE 0x01 // Rom write
-#define HEEPREAD 0x02  // Rom read
-#define HRAMWRITE 0x03 // Ram write
-#define HRAMREAD 0x04  // Ram read
-#define HIJOG 0x05     // Write n servo with different timing
-#define HSJOG 0x06     // Write n servo with same time
-#define HSTAT 0x07     // Read error
-#define HROLLBACK 0x08 // Back to factory value
-#define HREBOOT 0x09   // Reboot
+enum H_COMMANDS
+{
+H_EEP_WRITE = 1, // Rom write
+H_EEP_READ,  // Rom read
+H_RAM_WRITE, // Ram write
+H_RAM_READ,  // Ram read
+H_IJOG,     // Write n servo with different timing
+H_SJOG,     // Write n servo with same time
+H_STAT,     // Read error
+H_ROLLBACK, // Back to factory value
+H_REBOOT   // Reboot
+};
 
-#define H_LED_GREEN 0x01
-#define H_LED_BLUE 0x02
-#define H_LED_CYAN 0x03
-#define H_LED_RED 0x04
-#define H_LED_GREEN2 0x05
-#define H_LED_PINK 0x06
-#define H_LED_WHITE 0x07
+enum H_LEDS {
+H_LED_OFF,
+H_LED_GREEN,
+H_LED_BLUE,
+H_LED_CYAN,
+H_LED_RED,
+H_LED_GREEN2,
+H_LED_PINK,
+H_LED_WHITE
+};
 
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart4;
 
-void herkulex_init(void);
 void reboot(uint8_t servo_ID);
 void clear_error(uint8_t servo_ID);
 void torque_on(uint8_t servo_ID);
 void torque_off(uint8_t servo_ID);
-void move_one(uint8_t servo_ID, int goal, uint16_t p_time, uint8_t i_LED);
-void move_one_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED);
-void move_all(uint8_t servo_ID, int goal, uint8_t i_LED);
-void move_all_angle(uint8_t servo_ID, float angle, uint8_t i_LED);
-void move_speed_all(uint8_t servo_ID, int goal, uint8_t i_LED);
-void move_speed_one(uint8_t servo_ID, int goal, uint16_t p_time, uint8_t i_LED);
-void action_all(uint16_t p_time);
 void set_LED(uint8_t servo_ID, uint8_t LED_val);
 uint8_t stat(uint8_t servo_ID);
 uint8_t model(void);
@@ -43,5 +41,14 @@ void set_ID(uint8_t ID_old, uint8_t ID_new);
 uint16_t get_position(uint8_t servo_ID);
 float get_angle(uint8_t servo_ID);
 uint16_t get_speed(uint8_t servo_ID);
+
+
+
+void herkulex_init(void);
+
+void move_continuous(uint8_t servo_ID, int goal, uint8_t i_LED);
+void move_positional(uint8_t servo_ID, int position, uint16_t p_time, uint8_t i_LED);
+void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED);
+
 
 #endif // Herkulex_h

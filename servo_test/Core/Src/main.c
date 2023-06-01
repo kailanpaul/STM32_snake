@@ -116,19 +116,24 @@ int main(void)
 //		}
 //		if (++count == 1000){
 //			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-//			count = 0;
+		//			count = 0;
 //		}
-//		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-//		move_one_angle(253, -90, 1000, H_LED_GREEN);
-//		HAL_Delay(1000);
-//		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-//		HAL_Delay(1000);
-//		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-//		move_one_angle(253, 90, 1000, H_LED_BLUE);
-//		HAL_Delay(1000);
-//		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-		HAL_Delay(1000);
-		move_speed_one(253, 500, 1000, H_LED_BLUE);
+
+		move_angle(253, -150.0, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, -100, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, -50, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, 0, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, 50, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, 100, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+		move_angle(253, 150, 100, H_LED_BLUE);
+		HAL_Delay(2000);
+
 	}
 
 }
