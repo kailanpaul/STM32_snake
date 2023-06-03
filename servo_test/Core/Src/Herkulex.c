@@ -3,20 +3,20 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_uart.h"
 
-#define TIME_OUT 5	 // timeout serial communication
+#define TIME_OUT 5 // timeout serial communication
 #define BROADCAST_ID 0xFE
 
 uint8_t checksum1(uint8_t *data, uint8_t data_size, uint8_t ID, uint8_t cmd);
 uint8_t checksum2(uint8_t XOR);
 void ACK(uint8_t servo_ID, uint8_t val);
-void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address, uint8_t write_byte);
-void add_data(uint16_t goal_LSB, uint16_t goal_MSB, uint8_t set, uint8_t servo_ID, uint16_t count, uint8_t* move_data);
-void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t* data, uint8_t data_size);
+void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
+					uint8_t write_byte);
+void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size);
 void read_data(uint8_t size);
 
 void herkulex_init(void)
 {
-//	uint8_t count = 0;
+	//	uint8_t count = 0;
 	HAL_Delay(100);
 	clear_error(BROADCAST_ID); // clear error for all servos
 	HAL_Delay(10);
@@ -26,63 +26,21 @@ void herkulex_init(void)
 	HAL_Delay(10);
 }
 
-uint8_t checksum1(uint8_t *data, uint8_t data_size, uint8_t ID, uint8_t cmd)
-{
-	uint8_t XOR = 0;
-	XOR = XOR ^ (data_size+7);
-	XOR = XOR ^ ID;
-	XOR = XOR ^ cmd;
-	for (uint8_t i = 0; i < data_size; i++)
-	{
-		XOR = XOR ^ data[i];
-	}
-	return XOR & 0xFE;
-}
-
-uint8_t checksum2(uint8_t XOR)
-{
-	return (~XOR) & 0xFE;
-}
-
 // reboot single servo - pay attention 253 - all servos doesn't work!
 void reboot(uint8_t servo_ID)
 {
+	uint8_t data[0];
 
-//	p_size = 0x07;	 // 3.Packet size 7-58
-//	p_ID = servo_ID; // 4. Servo ID - 253=all servos
-//	cmd = HREBOOT;	 // 5. CMD
-//	ck1 = (p_size ^ p_ID ^ cmd) & 0xFE;
-//	ck2 = (~(p_size ^ p_ID ^ cmd)) & 0xFE;
-//
-//	data_ex[0] = 0xFF;	 // Packet Header
-//	data_ex[1] = 0xFF;	 // Packet Header
-//	data_ex[2] = p_size; // Packet Size
-//	data_ex[3] = p_ID;	 // Servo ID
-//	data_ex[4] = cmd;	 // Command Ram Write
-//	data_ex[5] = ck1;	 // Checksum 1
-//	data_ex[6] = ck2;	 // Checksum 2
-//
-//	send_data(H_REBOOT, servo_ID, data);
+	send_data(H_REBOOT, servo_ID, data, sizeof(data));
 }
 
 void clear_error(uint8_t servo_ID)
 {
 	uint8_t data[4];
-	data[0] = 0x30;	 // 8. Address
-	data[1] = 0x02;	 // 9. Length
-	data[2] = 0x00;	 // 10. Write error=0
-	data[3] = 0x00;	 // 10. Write detail error=0
-
-	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
-}
-
-// ACK  - 0=No reply, 1=Only reply to READ CMD, 2=Always reply
-void ACK(uint8_t servo_ID, uint8_t val)
-{
-	uint8_t data[3];
-	data[0] = 0x34;	   // 8. Address
-	data[1] = 0x01;	   // 9. Lenght
-	data[2] = val;	   // 10.Value. 0=No Replay, 1=Only reply to READ CMD, 2=Always reply
+	data[0] = 0x30; // 8. Address
+	data[1] = 0x02; // 9. Length
+	data[2] = 0x00; // 10. Write error=0
+	data[3] = 0x00; // 10. Write detail error=0
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
@@ -90,44 +48,48 @@ void ACK(uint8_t servo_ID, uint8_t val)
 void torque_on(uint8_t servo_ID)
 {
 	uint8_t data[3];
-	data[0] = 0x34;	   // 8. Address
-	data[1] = 0x01;	   // 9. Lenght
-	data[2] = 0x60;	   // 10. 0x60=Torque ON
+	data[0] = 0x34; // 8. Address
+	data[1] = 0x01; // 9. Lenght
+	data[2] = 0x60; // 10. 0x60=Torque ON
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
 
 void torque_off(uint8_t servo_ID)
 {
-//	p_size = 0x0A;	   // 3.Packet size 7-58
-//	p_ID = servo_ID;   // 4. Servo ID
-//	cmd = HRAMWRITE;   // 5. CMD
-//	data[0] = 0x34;	   // 8. Address
-//	data[1] = 0x01;	   // 9. Lenght
-//	data[2] = 0x00;	   // 10. 0x00=Torque Free
-//	string_length = 3; // lenghtData
-//
-//	ck1 = checksum1(data, string_length); // 6. Checksum1
-//	ck2 = checksum2(ck1);				  // 7. Checksum2
-//
-//	data_ex[0] = 0xFF;	  // Packet Header
-//	data_ex[1] = 0xFF;	  // Packet Header
-//	data_ex[2] = p_size;  // Packet Size
-//	data_ex[3] = p_ID;	  // Servo ID
-//	data_ex[4] = cmd;	  // Command Ram Write
-//	data_ex[5] = ck1;	  // Checksum 1
-//	data_ex[6] = ck2;	  // Checksum 2
-//	data_ex[7] = data[0]; // Address 52
-//	data_ex[8] = data[1]; // Length
-//	data_ex[9] = data[2]; // Torque Free
-//
-//	send_data(data_ex, p_size);
+	uint8_t data[3];
+	data[0] = 0x34; // 8. Address
+	data[1] = 0x01; // 9. Lenght
+	data[2] = 0x00; // 10. 0x00=Torque Off
+
+	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
+}
+
+void set_LED(uint8_t servo_ID, uint8_t LED_val)
+{
+	uint8_t data[3];
+	data[0] = 0x35;	   // 8. Address 53
+	data[1] = 0x01;	   // 9. Lenght
+	data[2] = LED_val; // 10.LedValue
+
+	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
+}
+
+// setID - Need to restart the servo
+void set_ID(uint8_t ID_old, uint8_t ID_new)
+{
+	uint8_t data[3];
+	data[0] = 0x06;	  // 8. Address
+	data[1] = 0x01;	  // 9. Lenght
+	data[2] = ID_new; // 10. ServoID NEW
+
+	send_data(H_EEP_WRITE, ID_old, data, sizeof(data));
 }
 
 void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED)
 {
 	uint8_t data[5];
-	data[0] = 0; //redundant
+	data[0] = 0; // redundant
 
 	if (speed > 1023 || speed < -1023)
 		return; // speed (goal) non correct
@@ -142,10 +104,10 @@ void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED)
 	{
 		goal_speed = speed;
 	}
-	data[1] = goal_speed & 0x00FF;		   // MSB speedGoal
+	data[1] = goal_speed & 0x00FF;		  // MSB speedGoal
 	data[2] = (goal_speed & 0xFF00) >> 8; // LSB speedGoal
 
-	data[3] = 0b10;	  // continuous mode
+	data[3] = 0b10; // continuous mode
 
 	// led
 	switch (i_LED)
@@ -164,12 +126,13 @@ void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED)
 		break;
 	}
 
-	data[4] = servo_ID;		  // 11. ServoID
+	data[4] = servo_ID; // 11. ServoID
 
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
-void move_positional(uint8_t servo_ID, int position, uint16_t p_time, uint8_t i_LED)
+void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
+					 uint8_t i_LED)
 {
 	uint8_t data[5];
 
@@ -179,10 +142,10 @@ void move_positional(uint8_t servo_ID, int position, uint16_t p_time, uint8_t i_
 		return;
 	data[0] = (uint8_t)((float)p_time / 11.2); // 8. Execution time
 
-	data[1] = position & 0X00FF;		 // MSB Pos
+	data[1] = position & 0X00FF;		// MSB Pos
 	data[2] = (position & 0XFF00) >> 8; // LSB Pos
 
-	data[3] = 0;	  // positional mode
+	data[3] = 0; // positional mode
 
 	// led
 	switch (i_LED)
@@ -201,7 +164,7 @@ void move_positional(uint8_t servo_ID, int position, uint16_t p_time, uint8_t i_
 		break;
 	}
 
-	data[4] = servo_ID;		  // 11. ServoID
+	data[4] = servo_ID; // 11. ServoID
 
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
@@ -215,7 +178,7 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED)
 }
 
 // move all servo at the same time to a position: servo list building
-//void move_all_angle(uint8_t servo_ID, float angle, uint8_t i_LED)
+// void move_all_angle(uint8_t servo_ID, float angle, uint8_t i_LED)
 //{
 //	if (angle > 160.0 || angle < -160.0)
 //		return; // out of the range
@@ -224,7 +187,7 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED)
 //}
 
 // move all servo at the same time with different speeds: servo list building
-//void move_speed_all(uint8_t servo_ID, int goal, uint8_t i_LED)
+// void move_speed_all(uint8_t servo_ID, int goal, uint8_t i_LED)
 //{
 //	if (goal > 1023 || goal < -1023)
 //		return; //-1023 <--> 1023 range
@@ -270,7 +233,7 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED)
 //}
 
 // move all servo with the same execution time
-//void action_all(uint16_t p_time)
+// void action_all(uint16_t p_time)
 //{
 //	if ((p_time < 0) || (p_time > 2856))
 //		return;
@@ -301,78 +264,57 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED)
 //	count = 0; // reset counter
 //}
 
-void set_LED(uint8_t servo_ID, uint8_t LED_val)
-{
-	uint8_t data[3];
-	data[0] = 0x35;	   // 8. Address 53
-	data[1] = 0x01;	   // 9. Lenght
-	data[2] = LED_val; // 10.LedValue
-
-	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
-}
-
 uint8_t stat(uint8_t servo_ID)
 {
 	uint8_t data[0];
 	send_data(H_STAT, servo_ID, data, sizeof(data));
 
-//	read_data(9); // read 9 bytes from serial
-//
-//	p_size = data_ex[2]; // 3.Packet size 7-58
-//	p_ID = data_ex[3];	 // 4. Servo ID
-//	cmd = data_ex[4];	 // 5. CMD
-//	data[0] = data_ex[7];
-//	data[1] = data_ex[8];
-//	string_length = 2;
-//
-//	ck1 = (data_ex[2] ^ data_ex[3] ^ data_ex[4] ^ data_ex[7] ^ data_ex[8]) & 0xFE;
-//	ck2 = checksum2(ck1);
-//
-//	if (ck1 != data_ex[5])
-//		return -1; // checksum verify
-//	if (ck2 != data_ex[6])
-//		return -2;
-//
-	return 0;//data_ex[7]; // return status
+	//	read_data(9); // read 9 bytes from serial
+	//
+	//	p_size = data_ex[2]; // 3.Packet size 7-58
+	//	p_ID = data_ex[3];	 // 4. Servo ID
+	//	cmd = data_ex[4];	 // 5. CMD
+	//	data[0] = data_ex[7];
+	//	data[1] = data_ex[8];
+	//	string_length = 2;
+	//
+	//	ck1 = (data_ex[2] ^ data_ex[3] ^ data_ex[4] ^ data_ex[7] ^ data_ex[8]) & 0xFE;
+	//	ck2 = checksum2(ck1);
+	//
+	//	if (ck1 != data_ex[5])
+	//		return -1; // checksum verify
+	//	if (ck2 != data_ex[6])
+	//		return -2;
+	//
+	return 0; // data_ex[7]; // return status
 }
 
 // model - 1=0101 - 2=0201
 uint8_t model(void)
 {
 	uint8_t data[2];
-	data[0] = 0x00;	   // 8. Address
-	data[1] = 0x01;	   // 9. Lenght
+	data[0] = 0x00; // 8. Address
+	data[1] = 0x01; // 9. Lenght
 
 	send_data(H_EEP_READ, BROADCAST_ID, data, sizeof(data));
 
-//	read_data(9);
-//
-//	p_size = data_ex[2];  // 3.Packet size 7-58
-//	p_ID = data_ex[3];	  // 4. Servo ID
-//	cmd = data_ex[4];	  // 5. CMD
-//	data[0] = data_ex[7]; // 8. 1st byte
-//	string_length = 1;	  // lenghtData
-//
-//	ck1 = checksum1(data, string_length); // 6. Checksum1
-//	ck2 = checksum2(ck1);				  // 7. Checksum2
-//
-//	if (ck1 != data_ex[5])
-//		return -1; // checksum verify
-//	if (ck2 != data_ex[6])
-//		return -2;
+	//	read_data(9);
+	//
+	//	p_size = data_ex[2];  // 3.Packet size 7-58
+	//	p_ID = data_ex[3];	  // 4. Servo ID
+	//	cmd = data_ex[4];	  // 5. CMD
+	//	data[0] = data_ex[7]; // 8. 1st byte
+	//	string_length = 1;	  // lenghtData
+	//
+	//	ck1 = checksum1(data, string_length); // 6. Checksum1
+	//	ck2 = checksum2(ck1);				  // 7. Checksum2
+	//
+	//	if (ck1 != data_ex[5])
+	//		return -1; // checksum verify
+	//	if (ck2 != data_ex[6])
+	//		return -2;
 
-	return 0;//data_ex[7]; // return status
-}
-
-// setID - Need to restart the servo
-void set_ID(uint8_t ID_old, uint8_t ID_new)
-{
-	uint8_t data[3];
-	data[0] = 0x06;	   // 8. Address
-	data[1] = 0x01;	   // 9. Lenght
-	data[2] = ID_new;  // 10. ServoID NEW
-
-	send_data(H_EEP_WRITE, ID_old, data, sizeof(data));
+	return 0; // data_ex[7]; // return status
 }
 
 // get Position
@@ -381,35 +323,35 @@ uint16_t get_position(uint8_t servo_ID)
 	uint16_t position = 0;
 
 	uint8_t data[2];
-	data[0] = 0x3A;	 // 8. Address
-	data[1] = 0x02;	 // 9. Lenght
+	data[0] = 0x3A; // 8. Address
+	data[1] = 0x02; // 9. Lenght
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
 	HAL_Delay(1);
 
-//	read_data(13);
-//
-//	p_size = data_ex[2]; // 3.Packet size 7-58
-//	p_ID = data_ex[3];	 // 4. Servo ID
-//	cmd = data_ex[4];	 // 5. CMD
-//	data[0] = data_ex[7];
-//	data[1] = data_ex[8];
-//	data[2] = data_ex[9];
-//	data[3] = data_ex[10];
-//	data[4] = data_ex[11];
-//	data[5] = data_ex[12];
-//	string_length = 6;
-//
-//	ck1 = checksum1(data, string_length); // 6. Checksum1
-//	ck2 = checksum2(ck1);				  // 7. Checksum2
-//
-//	if (ck1 != data_ex[5])
-//		return -1;
-//	if (ck2 != data_ex[6])
-//		return -1;
-//
-//	position = ((data_ex[10] & 0x03) << 8) | data_ex[9];
+	//	read_data(13);
+	//
+	//	p_size = data_ex[2]; // 3.Packet size 7-58
+	//	p_ID = data_ex[3];	 // 4. Servo ID
+	//	cmd = data_ex[4];	 // 5. CMD
+	//	data[0] = data_ex[7];
+	//	data[1] = data_ex[8];
+	//	data[2] = data_ex[9];
+	//	data[3] = data_ex[10];
+	//	data[4] = data_ex[11];
+	//	data[5] = data_ex[12];
+	//	string_length = 6;
+	//
+	//	ck1 = checksum1(data, string_length); // 6. Checksum1
+	//	ck2 = checksum2(ck1);				  // 7. Checksum2
+	//
+	//	if (ck1 != data_ex[5])
+	//		return -1;
+	//	if (ck2 != data_ex[6])
+	//		return -1;
+	//
+	//	position = ((data_ex[10] & 0x03) << 8) | data_ex[9];
 	return position;
 }
 
@@ -425,38 +367,68 @@ uint16_t get_speed(uint8_t servo_ID)
 	uint16_t speed = 0;
 
 	uint8_t data[2];
-	data[0] = 0x40;	 // 8. Address
-	data[1] = 0x02;	 // 9. Lenght
+	data[0] = 0x40; // 8. Address
+	data[1] = 0x02; // 9. Lenght
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
-//	read_data(13);
-//
-//	p_size = data_ex[2]; // 3.Packet size 7-58
-//	p_ID = data_ex[3];	 // 4. Servo ID
-//	cmd = data_ex[4];	 // 5. CMD
-//	data[0] = data_ex[7];
-//	data[1] = data_ex[8];
-//	data[2] = data_ex[9];
-//	data[3] = data_ex[10];
-//	data[4] = data_ex[11];
-//	data[5] = data_ex[12];
-//	string_length = 6;
-//
-//	ck1 = checksum1(data, string_length); // 6. Checksum1
-//	ck2 = checksum2(ck1);				  // 7. Checksum2
-//
-//	if (ck1 != data_ex[5])
-//		return -1;
-//	if (ck2 != data_ex[6])
-//		return -1;
-//
-//	speed = ((data_ex[10] & 0xFF) << 8) | data_ex[9];
+	//	read_data(13);
+	//
+	//	p_size = data_ex[2]; // 3.Packet size 7-58
+	//	p_ID = data_ex[3];	 // 4. Servo ID
+	//	cmd = data_ex[4];	 // 5. CMD
+	//	data[0] = data_ex[7];
+	//	data[1] = data_ex[8];
+	//	data[2] = data_ex[9];
+	//	data[3] = data_ex[10];
+	//	data[4] = data_ex[11];
+	//	data[5] = data_ex[12];
+	//	string_length = 6;
+	//
+	//	ck1 = checksum1(data, string_length); // 6. Checksum1
+	//	ck2 = checksum2(ck1);				  // 7. Checksum2
+	//
+	//	if (ck1 != data_ex[5])
+	//		return -1;
+	//	if (ck2 != data_ex[6])
+	//		return -1;
+	//
+	//	speed = ((data_ex[10] & 0xFF) << 8) | data_ex[9];
 	return speed;
 }
 
+uint8_t checksum1(uint8_t *data, uint8_t data_size, uint8_t ID, uint8_t cmd)
+{
+	uint8_t XOR = 0;
+	XOR = XOR ^ (data_size + 7);
+	XOR = XOR ^ ID;
+	XOR = XOR ^ cmd;
+	for (uint8_t i = 0; i < data_size; i++)
+	{
+		XOR = XOR ^ data[i];
+	}
+	return XOR & 0xFE;
+}
+
+uint8_t checksum2(uint8_t XOR)
+{
+	return (~XOR) & 0xFE;
+}
+
+// ACK  - 0=No reply, 1=Only reply to READ CMD, 2=Always reply
+void ACK(uint8_t servo_ID, uint8_t val)
+{
+	uint8_t data[3];
+	data[0] = 0x34; // 8. Address
+	data[1] = 0x01; // 9. Lenght
+	data[2] = val;	// 10.Value. 0=No Replay, 1=Only reply to READ CMD, 2=Always reply
+
+	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
+}
+
 // write to servo memory
-void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address, uint8_t write_byte)
+void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
+					uint8_t write_byte)
 {
 	uint8_t data[3];
 	data[0] = address;	  // 8. Address
@@ -467,29 +439,29 @@ void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address, uint8_t w
 }
 
 // add data to variable list servo for syncro execution
-void add_data(uint16_t goal_LSB, uint16_t goal_MSB, uint8_t set, uint8_t servo_ID, uint16_t count, uint8_t* move_data)
-{
-	move_data[count++] = goal_LSB;
-	move_data[count++] = goal_MSB;
-	move_data[count++] = set;
-	move_data[count++] = servo_ID;
-}
+// void add_data(uint16_t goal_LSB, uint16_t goal_MSB, uint8_t set, uint8_t servo_ID, uint16_t count, uint8_t* move_data)
+//{
+//	move_data[count++] = goal_LSB;
+//	move_data[count++] = goal_MSB;
+//	move_data[count++] = set;
+//	move_data[count++] = servo_ID;
+//}
 
-void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t* data, uint8_t data_size)
+void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size)
 {
-	uint8_t buffer_size = data_size+7;
+	uint8_t buffer_size = data_size + 7;
 	uint8_t buffer[buffer_size];
-	buffer[0] = 0xFF;	   // Packet Header
-	buffer[1] = 0xFF;	   // Packet Header
-	buffer[2] = buffer_size;   // Packet Size 7-58
-	buffer[3] = servo_ID;	   // Servo ID
-	buffer[4] = cmd;	   // command
-	buffer[5] = checksum1(data, data_size, servo_ID, cmd);	   // Checksum 1
-	buffer[6] = checksum2(buffer[5]);	   // Checksum 2
+	buffer[0] = 0xFF;									   // Packet Header
+	buffer[1] = 0xFF;									   // Packet Header
+	buffer[2] = buffer_size;							   // Packet Size 7-58
+	buffer[3] = servo_ID;								   // Servo ID
+	buffer[4] = cmd;									   // command
+	buffer[5] = checksum1(data, data_size, servo_ID, cmd); // Checksum 1
+	buffer[6] = checksum2(buffer[5]);					   // Checksum 2
 
-	for(uint8_t i = 0; i < data_size; i++)
+	for (uint8_t i = 0; i < data_size; i++)
 	{
-		buffer[i+7] = data[i];
+		buffer[i + 7] = data[i];
 	}
 
 	if (HAL_UART_Transmit(&huart4, buffer, buffer_size, TIME_OUT) != HAL_OK)
