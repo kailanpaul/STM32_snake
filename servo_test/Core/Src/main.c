@@ -13,7 +13,7 @@ void Error_Handler(void);
 
 CAN_RxHeaderTypeDef rxHeader; //CAN Bus Receive Header
 CAN_TxHeaderTypeDef txHeader; //CAN Bus Transmit Header
-uint8_t canRX[8];  //CAN Bus Receive Buffer
+uint8_t CAN_RX_buffer[8];  //CAN Bus Receive Buffer
 CAN_FilterTypeDef canfil; //CAN Bus Filter
 uint32_t canMailbox; //CAN Bus Mail box variable
 
@@ -22,6 +22,8 @@ uint8_t usb_out[18];
 uint16_t len = sizeof(usb_out)/sizeof(usb_out[0]);
 //uint8_t buf[] = "test";
 //uint16_t len = sizeof(buf)/sizeof(buf[0]);
+
+uint8_t UART_RX_buffer[16];
 
 uint8_t check = 0;
 
@@ -81,6 +83,9 @@ int main(void)
 
 	herkulex_init();
 
+	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 8) != HAL_OK)
+				    	Error_Handler();
+
 	while (1)
 	{
 //		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
@@ -119,31 +124,45 @@ int main(void)
 		//			count = 0;
 //		}
 
-		move_angle(253, -150.0, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, -100, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, -50, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, 0, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, 50, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, 100, 100, H_LED_BLUE);
-		HAL_Delay(2000);
-		move_angle(253, 150, 100, H_LED_BLUE);
-		HAL_Delay(2000);
+//		move_angle(253, -150.0, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, -100, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, -50, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, 0, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, 50, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, 100, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+//		move_angle(253, 150, 100, H_LED_BLUE);
+//		HAL_Delay(2000);
+
+		HAL_Delay(5000);
+		get_speed(253);
+//		if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 16) != HAL_OK)
+//			    	Error_Handler();
 
 	}
 
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
+uint8_t* read_UART_buffer(void)
 {
-	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, canRX) != HAL_OK) //Receive CAN bus message to canRX buffer
-	{
+	return UART_RX_buffer;
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (HAL_UART_Receive_IT(huart, UART_RX_buffer, 16) != HAL_OK)
+    	Error_Handler();
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) //Receive CAN bus message to canRX buffer
 		Error_Handler();
-	}
 //	CDC_Transmit_FS("ID: ", 4);
 //	while (CDC_Transmit_FS("ID: ", 4) != USBD_OK);
 //	while (CDC_Transmit_FS(rxHeader.StdId, 1) != USBD_OK);

@@ -3,16 +3,18 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_uart.h"
 
-#define TIME_OUT 5 // timeout serial communication
+#define T_TIME_OUT 100
+#define R_TIME_OUT 5000
 #define BROADCAST_ID 0xFE
 
 uint8_t checksum1(uint8_t *data, uint8_t data_size, uint8_t ID, uint8_t cmd);
 uint8_t checksum2(uint8_t XOR);
-void ACK(uint8_t servo_ID, uint8_t val);
+void set_ACK(uint8_t servo_ID, uint8_t val);
 void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
 					uint8_t write_byte);
-void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size);
-void read_data(uint8_t size);
+HAL_StatusTypeDef send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size);
+HAL_StatusTypeDef read_data(uint8_t *buffer, uint8_t size);
+
 
 void herkulex_init(void)
 {
@@ -20,7 +22,7 @@ void herkulex_init(void)
 	HAL_Delay(100);
 	clear_error(BROADCAST_ID); // clear error for all servos
 	HAL_Delay(10);
-	ACK(BROADCAST_ID, 1); // set ACK
+	set_ACK(BROADCAST_ID, 1); // set ACK
 	HAL_Delay(10);
 	torque_on(BROADCAST_ID); // torqueON for all servos
 	HAL_Delay(10);
@@ -372,28 +374,32 @@ uint16_t get_speed(uint8_t servo_ID)
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
-	//	read_data(13);
-	//
-	//	p_size = data_ex[2]; // 3.Packet size 7-58
-	//	p_ID = data_ex[3];	 // 4. Servo ID
-	//	cmd = data_ex[4];	 // 5. CMD
-	//	data[0] = data_ex[7];
-	//	data[1] = data_ex[8];
-	//	data[2] = data_ex[9];
-	//	data[3] = data_ex[10];
-	//	data[4] = data_ex[11];
-	//	data[5] = data_ex[12];
-	//	string_length = 6;
-	//
-	//	ck1 = checksum1(data, string_length); // 6. Checksum1
-	//	ck2 = checksum2(ck1);				  // 7. Checksum2
-	//
-	//	if (ck1 != data_ex[5])
-	//		return -1;
-	//	if (ck2 != data_ex[6])
-	//		return -1;
-	//
-	//	speed = ((data_ex[10] & 0xFF) << 8) | data_ex[9];
+//	uint8_t buffer[13];
+	uint8_t r_data[6];
+	read_data(r_data, sizeof(r_data));
+	read_data(r_data, sizeof(r_data));
+	read_data(r_data, sizeof(r_data));
+	read_data(r_data, sizeof(r_data));
+	read_data(r_data, sizeof(r_data));
+//	uint8_t r_data[6];
+
+
+//	r_data[0] = buffer[7];
+//	r_data[1] = buffer[8];
+//	r_data[2] = buffer[9];
+//	r_data[3] = buffer[10];
+//	r_data[4] = buffer[11];
+//	r_data[5] = buffer[12];
+//
+//	uint8_t ck1 = checksum1(r_data, sizeof(r_data), buffer[3], buffer[4]); // 6. Checksum1
+//	uint8_t ck2 = checksum2(ck1);				  // 7. Checksum2
+//
+//	if (ck1 != buffer[5])
+//		return -1;
+//	if (ck2 != buffer[6])
+//		return -1;
+
+	speed = ((r_data[3] & 0xFF) << 8) | r_data[2];
 	return speed;
 }
 
@@ -416,7 +422,7 @@ uint8_t checksum2(uint8_t XOR)
 }
 
 // ACK  - 0=No reply, 1=Only reply to READ CMD, 2=Always reply
-void ACK(uint8_t servo_ID, uint8_t val)
+void set_ACK(uint8_t servo_ID, uint8_t val)
 {
 	uint8_t data[3];
 	data[0] = 0x34; // 8. Address
@@ -447,7 +453,7 @@ void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
 //	move_data[count++] = servo_ID;
 //}
 
-void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size)
+HAL_StatusTypeDef send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size)
 {
 	uint8_t buffer_size = data_size + 7;
 	uint8_t buffer[buffer_size];
@@ -460,102 +466,35 @@ void send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_t data_size)
 	buffer[6] = checksum2(buffer[5]);					   // Checksum 2
 
 	for (uint8_t i = 0; i < data_size; i++)
-	{
 		buffer[i + 7] = data[i];
-	}
 
-	if (HAL_UART_Transmit(&huart4, buffer, buffer_size, TIME_OUT) != HAL_OK)
-	{
-		Error_Handler();
-	}
+	if (HAL_UART_Transmit(&huart4, buffer, buffer_size, T_TIME_OUT) != HAL_OK)
+		return HAL_ERROR;
+	
 	HAL_Delay(1);
+	return HAL_OK;
 }
 
-void read_data(uint8_t size)
+HAL_StatusTypeDef read_data(uint8_t *data, uint8_t data_size)
 {
-	// int i = 0;
-	// int beginsave=0;
-	// int Time_Counter=0;
-	// switch (port)
-	// {
-	// case SSerial:
+//	uint8_t buffer_size = data_size + 7;
+	uint8_t buffer[16];
+	*buffer = read_UART_buffer();
 
-	//     while((SwSerial.available() < size) & (Time_Counter < TIME_OUT)){
-	//     		Time_Counter++;
-	//     		delayMicroseconds(1000);  //wait 1 millisecond for 10 times
-	// 	}
+//	if (HAL_UART_Receive(&huart4, buffer, buffer_size, R_TIME_OUT) != HAL_OK)
+//		return HAL_ERROR;
 
-	// 	while (SwSerial.available() > 0){
-	// 		byte inchar = (byte)SwSerial.read();
-	// 		if ( (inchar == 0xFF) & ((byte)SwSerial.peek() == 0xFF) ){
-	// 				beginsave=1;
-	// 				i=0; 				 // if found new header, begin again
-	// 		}
-	// 		if (beginsave==1 && i<size) {
-	// 			   dataEx[i] = inchar;
-	// 			   i++;
-	// 		}
-	// 	}
-	// 	SwSerial.flush();
-	// 	break;
 
-	// #if defined (__AVR_ATmega1280__) || defined (__AVR_ATmega128__) || defined (__AVR_ATmega2560__)
-	// case HSerial1:
-	// 	while((Serial1.available() < size) & (Time_Counter < TIME_OUT)){
-	//     		Time_Counter++;
-	//     		delayMicroseconds(1000);
-	// 	}
-	// 	while (Serial1.available() > 0){
-	//   		byte inchar = (byte)Serial1.read();
-	// 		//printHexByte(inchar);
-	//     	if ( (inchar == 0xFF) & ((byte)Serial1.peek() == 0xFF) ){
-	// 					beginsave=1;
-	// 					i=0;
-	//          }
-	//         if (beginsave==1 && i<size) {
-	//                    dataEx[i] = inchar;
-	//                    i++;
-	// 		}
-	// 	}
-	// 	break;
+	for (uint8_t i = 0; i < data_size; i++)
+		data[i] = buffer[i+7];
 
-	// case HSerial2:
-	//     while((Serial2.available() < size) & (Time_Counter < TIME_OUT)){
-	//     		Time_Counter++;
-	//     		delayMicroseconds(1000);
-	// 	}
+	uint8_t ck1 = checksum1(data, data_size, buffer[3], buffer[4]); // 6. Checksum1
+	uint8_t ck2 = checksum2(ck1);				  // 7. Checksum2
 
-	// 	while (Serial2.available() > 0){
-	// 		byte inchar = (byte)Serial2.read();
-	// 		if ( (inchar == 0xFF) & ((byte)Serial2.peek() == 0xFF) ){
-	// 				beginsave=1;
-	// 				i=0;
-	// 		}
-	// 		if (beginsave==1 && i<size) {
-	// 			   dataEx[i] = inchar;
-	// 			   i++;
-	// 		}
-	// 	}
-	// 	break;
+//	if (ck1 != buffer[5])
+//		return HAL_ERROR;
+//	if (ck2 != buffer[6])
+//		return HAL_ERROR;
 
-	// case HSerial3:
-	// 	while((Serial3.available() < size) & (Time_Counter < TIME_OUT)){
-	// 		Time_Counter++;
-	// 		delayMicroseconds(1000);
-	// 	}
-
-	// 	while (Serial3.available() > 0){
-	// 		byte inchar = (byte)Serial3.read();
-	// 		if ( (inchar == 0xFF) & ((byte)Serial3.peek() == 0xFF) ){
-	// 				beginsave=1;
-	// 				i=0;
-	// 		}
-	// 		if (beginsave==1 && i<size) {
-	// 			   dataEx[i] = inchar;
-	// 			   i++;
-	// 		}
-	// 	}
-	// 	break;
-	// #endif
-	// }
+	return HAL_OK;
 }
