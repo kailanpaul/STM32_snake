@@ -83,7 +83,7 @@ int main(void)
 
 	herkulex_init();
 
-	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 8) != HAL_OK)
+	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 16) != HAL_OK)
 				    	Error_Handler();
 
 	while (1)
