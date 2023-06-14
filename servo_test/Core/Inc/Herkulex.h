@@ -40,7 +40,7 @@ void torque_off(uint8_t servo_ID);
 void set_LED(uint8_t servo_ID, uint8_t LED_val);
 void set_ID(uint8_t ID_old, uint8_t ID_new);
 
-void move_continuous(uint8_t servo_ID, int goal, uint8_t i_LED);
+void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED);
 void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
                      uint8_t i_LED);
 void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED);

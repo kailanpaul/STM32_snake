@@ -11,7 +11,6 @@ extern "C" {
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart4;
 
-uint8_t* read_UART_buffer(void);
 void Error_Handler(void);
 
 

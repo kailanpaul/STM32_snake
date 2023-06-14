@@ -23,7 +23,6 @@ uint16_t len = sizeof(usb_out)/sizeof(usb_out[0]);
 //uint8_t buf[] = "test";
 //uint16_t len = sizeof(buf)/sizeof(buf[0]);
 
-uint8_t UART_RX_buffer[16];
 
 uint8_t check = 0;
 
@@ -83,8 +82,8 @@ int main(void)
 
 	herkulex_init();
 
-	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 16) != HAL_OK)
-				    	Error_Handler();
+//	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, UART_RX_BUFFER_SIZE) != HAL_OK)
+//		Error_Handler();
 
 	while (1)
 	{
@@ -138,9 +137,10 @@ int main(void)
 //		HAL_Delay(2000);
 //		move_angle(253, 150, 100, H_LED_BLUE);
 //		HAL_Delay(2000);
-
-		HAL_Delay(5000);
+		move_continuous(253, 500, H_LED_BLUE);
+		HAL_Delay(1000);
 		get_speed(253);
+//		test();
 //		if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 16) != HAL_OK)
 //			    	Error_Handler();
 
@@ -148,15 +148,12 @@ int main(void)
 
 }
 
-uint8_t* read_UART_buffer(void)
-{
-	return UART_RX_buffer;
-}
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (HAL_UART_Receive_IT(huart, UART_RX_buffer, 16) != HAL_OK)
-    	Error_Handler();
+//	uint8_t buf[20];
+//	buf = *huart4.pRxBuffPtr;
+//	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, UART_RX_buffer_size) != HAL_OK)
+//		Error_Handler();
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)

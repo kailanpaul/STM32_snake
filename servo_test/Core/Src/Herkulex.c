@@ -374,30 +374,8 @@ uint16_t get_speed(uint8_t servo_ID)
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
-//	uint8_t buffer[13];
 	uint8_t r_data[6];
 	read_data(r_data, sizeof(r_data));
-	read_data(r_data, sizeof(r_data));
-	read_data(r_data, sizeof(r_data));
-	read_data(r_data, sizeof(r_data));
-	read_data(r_data, sizeof(r_data));
-//	uint8_t r_data[6];
-
-
-//	r_data[0] = buffer[7];
-//	r_data[1] = buffer[8];
-//	r_data[2] = buffer[9];
-//	r_data[3] = buffer[10];
-//	r_data[4] = buffer[11];
-//	r_data[5] = buffer[12];
-//
-//	uint8_t ck1 = checksum1(r_data, sizeof(r_data), buffer[3], buffer[4]); // 6. Checksum1
-//	uint8_t ck2 = checksum2(ck1);				  // 7. Checksum2
-//
-//	if (ck1 != buffer[5])
-//		return -1;
-//	if (ck2 != buffer[6])
-//		return -1;
 
 	speed = ((r_data[3] & 0xFF) << 8) | r_data[2];
 	return speed;
@@ -471,19 +449,16 @@ HAL_StatusTypeDef send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data, uint8_
 	if (HAL_UART_Transmit(&huart4, buffer, buffer_size, T_TIME_OUT) != HAL_OK)
 		return HAL_ERROR;
 	
-	HAL_Delay(1);
 	return HAL_OK;
 }
 
 HAL_StatusTypeDef read_data(uint8_t *data, uint8_t data_size)
 {
-//	uint8_t buffer_size = data_size + 7;
-	uint8_t buffer[16];
-	*buffer = read_UART_buffer();
+	uint8_t buffer_size = data_size + 7;
+	uint8_t buffer[buffer_size];
 
-//	if (HAL_UART_Receive(&huart4, buffer, buffer_size, R_TIME_OUT) != HAL_OK)
-//		return HAL_ERROR;
-
+	if (HAL_UART_Receive(&huart4, buffer, buffer_size, R_TIME_OUT) != HAL_OK)
+		return HAL_ERROR;
 
 	for (uint8_t i = 0; i < data_size; i++)
 		data[i] = buffer[i+7];
@@ -491,10 +466,10 @@ HAL_StatusTypeDef read_data(uint8_t *data, uint8_t data_size)
 	uint8_t ck1 = checksum1(data, data_size, buffer[3], buffer[4]); // 6. Checksum1
 	uint8_t ck2 = checksum2(ck1);				  // 7. Checksum2
 
-//	if (ck1 != buffer[5])
-//		return HAL_ERROR;
-//	if (ck2 != buffer[6])
-//		return HAL_ERROR;
+	if (ck1 != buffer[5])
+		return HAL_ERROR;
+	if (ck2 != buffer[6])
+		return HAL_ERROR;
 
 	return HAL_OK;
 }
