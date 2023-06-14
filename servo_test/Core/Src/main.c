@@ -69,9 +69,9 @@ int main(void) {
 			!= HAL_OK) // Initialize CAN Bus Rx Interrupt
 		Error_Handler();
 
-	uint8_t csend[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }; // Tx Buffer
-
-	uint16_t count = 0;
+//	uint8_t csend[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }; // Tx Buffer
+//
+//	uint16_t count = 0;
 
 	herkulex_init();
 
@@ -111,7 +111,7 @@ int main(void) {
 //			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
 		//			count = 0;
 //		}
-
+		move_continuous(253, 500, H_LED_BLUE);
 		HAL_Delay(1000);
 		get_position(253);
 

@@ -375,8 +375,8 @@ HAL_StatusTypeDef read_data(uint8_t *data, uint8_t data_size) {
 	HAL_StatusTypeDef status = HAL_BUSY;
 	while (status != HAL_OK) {
 		status = HAL_UART_Receive(&huart4, buffer, buffer_size, R_TIME_OUT);
-		if (status == HAL_ERROR)
-			return HAL_ERROR;
+		if ((status != HAL_OK) && (status != HAL_BUSY))
+			return status;
 	}
 
 	for (uint8_t i = 0; i < data_size; i++)
