@@ -7,12 +7,10 @@ extern "C" {
 
 #include "stm32f4xx_hal.h"
 
-
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart4;
 
 void Error_Handler(void);
-
 
 #ifdef __cplusplus
 }

@@ -7,7 +7,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_UART4_Init(void);
-extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
 
 void Error_Handler(void);
 
@@ -19,10 +19,9 @@ uint32_t canMailbox; //CAN Bus Mail box variable
 
 uint8_t usb_in[1];
 uint8_t usb_out[18];
-uint16_t len = sizeof(usb_out)/sizeof(usb_out[0]);
+uint16_t len = sizeof(usb_out) / sizeof(usb_out[0]);
 //uint8_t buf[] = "test";
 //uint16_t len = sizeof(buf)/sizeof(buf[0]);
-
 
 uint8_t check = 0;
 
@@ -33,9 +32,7 @@ uint8_t check = 0;
 #define BLUE_LED                               GPIO_PIN_15
 #define BLUE_GPIO_PORT                         GPIOB
 
-
-int main(void)
-{
+int main(void) {
 	HAL_Init();
 
 	SystemClock_Config();
@@ -63,30 +60,22 @@ int main(void)
 	txHeader.ExtId = 0x02;
 	txHeader.TransmitGlobalTime = DISABLE;
 
-	if (HAL_CAN_ConfigFilter(&hcan1,&canfil) != HAL_OK) //Initialize CAN Filter
-	{
+	if (HAL_CAN_ConfigFilter(&hcan1, &canfil) != HAL_OK) //Initialize CAN Filter
 		Error_Handler();
-	}
-	if (HAL_CAN_Start(&hcan1) != HAL_OK) //Initialize CAN Bus
-	{
-		Error_Handler();
-	}
-	if (HAL_CAN_ActivateNotification(&hcan1,CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)// Initialize CAN Bus Rx Interrupt
-	{
-		Error_Handler();
-	}
 
-	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+	if (HAL_CAN_Start(&hcan1) != HAL_OK) //Initialize CAN Bus
+		Error_Handler();
+	if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING)
+			!= HAL_OK) // Initialize CAN Bus Rx Interrupt
+		Error_Handler();
+
+	uint8_t csend[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }; // Tx Buffer
 
 	uint16_t count = 0;
 
 	herkulex_init();
 
-//	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, UART_RX_BUFFER_SIZE) != HAL_OK)
-//		Error_Handler();
-
-	while (1)
-	{
+	while (1) {
 //		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 //		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
 //		{
@@ -123,42 +112,23 @@ int main(void)
 		//			count = 0;
 //		}
 
-//		move_angle(253, -150.0, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, -100, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, -50, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, 0, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, 50, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, 100, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-//		move_angle(253, 150, 100, H_LED_BLUE);
-//		HAL_Delay(2000);
-		move_continuous(253, 500, H_LED_BLUE);
 		HAL_Delay(1000);
-		get_speed(253);
-//		test();
-//		if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, 16) != HAL_OK)
-//			    	Error_Handler();
+		get_position(253);
 
 	}
 
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 //	uint8_t buf[20];
 //	buf = *huart4.pRxBuffPtr;
 //	if (HAL_UART_Receive_IT(&huart4, UART_RX_buffer, UART_RX_buffer_size) != HAL_OK)
 //		Error_Handler();
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) //Receive CAN bus message to canRX buffer
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer)
+			!= HAL_OK) //Receive CAN bus message to canRX buffer
 		Error_Handler();
 //	CDC_Transmit_FS("ID: ", 4);
 //	while (CDC_Transmit_FS("ID: ", 4) != USBD_OK);
@@ -182,10 +152,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 //	CDC_Transmit_FS("1", 1);
 }
 
-void SystemClock_Config(void)
-{
-	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
 	/** Configure the main internal regulator output voltage
 	 */
@@ -204,41 +173,35 @@ void SystemClock_Config(void)
 	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
 	RCC_OscInitStruct.PLL.PLLQ = 3;
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	{
 		Error_Handler();
-	}
 
 	/** Initializes the CPU, AHB and APB buses clocks
 	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-	{
 		Error_Handler();
-	}
 
 	/** Initializes the CPU, AHB and APB buses clocks
 	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-	{
 		Error_Handler();
-	}
+
 }
 
-static void MX_CAN1_Init(void)
-{
+static void MX_CAN1_Init(void) {
 	hcan1.Instance = CAN1;
 	hcan1.Init.Prescaler = 9;
 	hcan1.Init.Mode = CAN_MODE_NORMAL;
@@ -251,30 +214,26 @@ static void MX_CAN1_Init(void)
 	hcan1.Init.AutoRetransmission = ENABLE;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
 	hcan1.Init.TransmitFifoPriority = DISABLE;
-	if (HAL_CAN_Init(&hcan1) != HAL_OK)
-	{
+	if (HAL_CAN_Init(&hcan1) != HAL_OK) {
 		Error_Handler();
 	}
 }
 
-static void MX_UART4_Init(void)
-{
-  huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
-  huart4.Init.WordLength = UART_WORDLENGTH_8B;
-  huart4.Init.StopBits = UART_STOPBITS_1;
-  huart4.Init.Parity = UART_PARITY_NONE;
-  huart4.Init.Mode = UART_MODE_TX_RX;
-  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart4) != HAL_OK)
-  {
-    Error_Handler();
-  }
+static void MX_UART4_Init(void) {
+	huart4.Instance = UART4;
+	huart4.Init.BaudRate = 115200;
+	huart4.Init.WordLength = UART_WORDLENGTH_8B;
+	huart4.Init.StopBits = UART_STOPBITS_1;
+	huart4.Init.Parity = UART_PARITY_NONE;
+	huart4.Init.Mode = UART_MODE_TX_RX;
+	huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart4) != HAL_OK)
+		Error_Handler();
+
 }
 
-static void MX_GPIO_Init(void)
-{
+static void MX_GPIO_Init(void) {
 	/* GPIO Ports Clock Enable */
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOH_CLK_ENABLE();
@@ -307,12 +266,10 @@ static void MX_GPIO_Init(void)
 //  HAL_IncTick();
 //}
 
-void Error_Handler(void)
-{
+void Error_Handler(void) {
 	__disable_irq();
 	HAL_GPIO_WritePin(RED_GPIO_PORT, RED_LED, GPIO_PIN_SET);
-	while (1)
-	{
+	while (1) {
 	}
 }
 

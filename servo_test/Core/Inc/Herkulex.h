@@ -3,29 +3,27 @@
 
 #include "stm32f4xx_hal.h"
 
-enum H_COMMANDS
-{
-    H_EEP_WRITE = 1, // Rom write
-    H_EEP_READ,      // Rom read
-    H_RAM_WRITE,     // Ram write
-    H_RAM_READ,      // Ram read
-    H_IJOG,          // Write n servo with different timing
-    H_SJOG,          // Write n servo with same time
-    H_STAT,          // Read error
-    H_ROLLBACK,      // Back to factory value
-    H_REBOOT         // Reboot
+enum H_COMMANDS {
+	H_EEP_WRITE = 1, // Rom write
+	H_EEP_READ,      // Rom read
+	H_RAM_WRITE,     // Ram write
+	H_RAM_READ,      // Ram read
+	H_IJOG,          // Write n servo with different timing
+	H_SJOG,          // Write n servo with same time
+	H_STAT,          // Read error
+	H_ROLLBACK,      // Back to factory value
+	H_REBOOT         // Reboot
 };
 
-enum H_LEDS
-{
-    H_LED_OFF,
-    H_LED_GREEN,
-    H_LED_BLUE,
-    H_LED_CYAN,
-    H_LED_RED,
-    H_LED_GREEN2,
-    H_LED_PINK,
-    H_LED_WHITE
+enum H_LEDS {
+	H_LED_OFF,
+	H_LED_GREEN,
+	H_LED_BLUE,
+	H_LED_CYAN,
+	H_LED_RED,
+	H_LED_GREEN2,
+	H_LED_PINK,
+	H_LED_WHITE
 };
 
 extern CAN_HandleTypeDef hcan1;
@@ -42,11 +40,10 @@ void set_ID(uint8_t ID_old, uint8_t ID_new);
 
 void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED);
 void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
-                     uint8_t i_LED);
+		uint8_t i_LED);
 void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED);
 
-uint8_t stat(uint8_t servo_ID);
-uint8_t model(void);
+uint8_t get_status(uint8_t servo_ID);
 uint16_t get_position(uint8_t servo_ID);
 float get_angle(uint8_t servo_ID);
 uint16_t get_speed(uint8_t servo_ID);
