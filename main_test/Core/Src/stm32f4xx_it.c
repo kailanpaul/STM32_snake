@@ -58,6 +58,7 @@
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 CAN_HandleTypeDef hcan1;
 UART_HandleTypeDef huart4;
+I2C_HandleTypeDef hi2c2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */

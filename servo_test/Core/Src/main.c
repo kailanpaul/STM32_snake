@@ -111,9 +111,9 @@ int main(void) {
 //			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
 		//			count = 0;
 //		}
-		move_continuous(253, 500, H_LED_BLUE);
+		move_continuous(4, 500, H_LED_BLUE);
 		HAL_Delay(1000);
-		get_position(253);
+//		get_position(253);
 
 	}
 

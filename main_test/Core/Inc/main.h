@@ -9,6 +9,7 @@ extern "C" {
 
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart4;
+extern I2C_HandleTypeDef hi2c2;
 
 void Error_Handler(void);
 
