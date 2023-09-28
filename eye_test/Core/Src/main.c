@@ -223,11 +223,13 @@ int main(void) {
 		//-offset;
 //		usb_out[0] = '!';
 //		CDC_Transmit_FS(usb_out, 2);
-		HAL_Delay(rand() % (250 - 100 + 1) + 100);
-		HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_3);
-		HAL_Delay(rand() % (50 - 25 + 1) + 25);
+
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+		HAL_Delay(rand() % (5000 - 200 + 1) + 200);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+		HAL_Delay(100);
 
 //		i++;
 
