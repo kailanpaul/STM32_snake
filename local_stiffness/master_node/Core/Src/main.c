@@ -4,11 +4,11 @@
 #include "Herkulex.h"
 
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_CAN1_Init(void);
-static void MX_UART4_Init(void);
-extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
-static void MX_I2C2_Init(void);
+//static void MX_GPIO_Init(void);
+//static void MX_CAN1_Init(void);
+//static void MX_UART4_Init(void);
+//extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
+//static void MX_I2C2_Init(void);
 
 CAN_RxHeaderTypeDef rxHeader; //CAN Bus Receive Header
 CAN_TxHeaderTypeDef txHeader; //CAN Bus Transmit Header
@@ -109,7 +109,7 @@ int main(void) {
 //	if (HAL_I2C_Mem_Write(&hi2c3, IMU_address, 0x02, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
 
-	int i = 0;
+//	int i = 0;
 //	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(1000);
 //
@@ -224,9 +224,34 @@ int main(void) {
 //		CDC_Transmit_FS(usb_out, 2);
 
 //		i++;
+//		if(usb_in[0] == 'x')
+//		{
+//			memset(usb_in, '\0', 64); // clear buffer
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+////			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+//			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+//			{
+//				Error_Handler();
+//			}
+//			HAL_Delay(10);
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+//		}
+//
+////		CDC_Transmit_FS("0", 1);
+//		if (rxHeader.StdId < 48) {
+//			if (rxHeader.StdId > 9)
+//			{
+//				rxHeader.StdId += 55;
+//			} else {
+//				rxHeader.StdId += 48;
+//			}
+//		}
+//		usb_out[0] = rxHeader.StdId;
+//		CDC_Transmit_FS(usb_out, 1);
+//		HAL_Delay(50);
+//	}
 		if(usb_in[0] == 'x')
 		{
-			memset(usb_in, '\0', 64); // clear buffer
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
 //			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
@@ -235,21 +260,9 @@ int main(void) {
 			}
 			HAL_Delay(10);
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+			memset(usb_in, '\0', 64); // clear buffer
+			CDC_Transmit_FS("m", 1);
 		}
-
-//		CDC_Transmit_FS("0", 1);
-		if (rxHeader.StdId < 48) {
-			if (rxHeader.StdId > 9)
-			{
-				rxHeader.StdId += 55;
-			} else {
-				rxHeader.StdId += 48;
-			}
-		}
-		usb_out[0] = rxHeader.StdId;
-		CDC_Transmit_FS(usb_out, 1);
-		HAL_Delay(50);
-	}
 
 }
 

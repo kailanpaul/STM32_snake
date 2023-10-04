@@ -4,18 +4,16 @@ from scipy.fft import fft, ifft
 from matplotlib.animation import FuncAnimation
 from matplotlib.animation import PillowWriter
 
-import serial
-import os
+# import serial
 
-if os.name == 'nt':
-    ser = serial.Serial('COM5', 9600)
-else:
-    ser = serial.Serial('/dev/ttyACM0')
-
+# ser = serial.Serial('/dev/ttyACM0')
 # ser.write(b'x')
-# print(ser.read())
+
+# while True:
+#     print(ser.read())
 
 # define constants
+
 # gait parameters
 A = np.pi/6
 omega = np.pi
@@ -82,4 +80,3 @@ for t in range_with_floats(0, t_max, dt):
     # plt.show()
 
 # print("Max angle experienced is: ", max_curr, "degrees")
-
