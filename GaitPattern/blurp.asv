@@ -26,7 +26,14 @@ for t=0:time_step:10
         points_i = sin(t*omega + phi*(i-1));
         points(i) = points_i;
     end
-    plot(joints, points, 'o-')
+    max_curr = max(points);
+    if max_curr > max_val
+        max_val = max_curr;
+    end
+
+    
+
+    plot(joints, points, 'o-', 'Color', [0.5 0.5 0.3])
     frame = getframe(gcf);
     M(frame_number) = frame;
     frame_number = frame_number + 1;
