@@ -104,6 +104,7 @@ int main(void)
 			HAL_Delay(10);
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 			memset(usb_in, '\0', 64); // clear buffer
+			CDC_Transmit_FS("m", 1);
 		}
 
 //		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
