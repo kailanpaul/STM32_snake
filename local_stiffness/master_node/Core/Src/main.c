@@ -4,6 +4,15 @@
 #include "Herkulex.h"
 
 void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_CAN1_Init(void);
+static void MX_I2C2_Init(void);
+static void MX_UART4_Init(void);
+extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
+
+void Error_Handler(void);
+
+void SystemClock_Config(void);
 //static void MX_GPIO_Init(void);
 //static void MX_CAN1_Init(void);
 //static void MX_UART4_Init(void);
@@ -51,7 +60,7 @@ int dec_angle;
 #define ANGLE_L 0x0E
 #define ANGLE_R 0x0F
 
-#define SERVO_ID 253
+#define SERVO_ID 4
 
 int main(void) {
 	HAL_Init();
@@ -95,10 +104,10 @@ int main(void) {
 	//
 	//	uint16_t count = 0;
 	HAL_Delay(5000);
-//	herkulex_init();
-
-
-
+	herkulex_init();
+	int i = 0;
+	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+	HAL_Delay(1000);
 
 //	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0C, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
@@ -180,31 +189,49 @@ int main(void) {
 //	usb_out[1] = '\r';
 //	usb_out[2] = '\n';
 
-	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 
+	//		if(usb_in[0] == 'x')
+	//		{
+	//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+	////			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+	//			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+	//			{
+	//				Error_Handler();
+	//			}
+	//			HAL_Delay(10);
+	//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+	//			memset(usb_in, '\0', 64); // clear buffer
+	//			CDC_Transmit_FS("m", 1);
+	//		}
+
+//	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 	while (1) {
 
-//		if(get_status(SERVO_ID)) {
-//			clear_error(SERVO_ID);
-//			torque_on(SERVO_ID);
-//			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-//			HAL_Delay(1000);
-//		}
-//
-//		if (i==80)
-//		{
-//			usb_out[0] = '<';
-//			CDC_Transmit_FS(usb_out, 3);
-//			HAL_Delay(50);
-//			move_angle(SERVO_ID, -40, 000, H_LED_BLUE);
-//		}
-//		if (i==160) {
-//			usb_out[0] = '>';
-//			CDC_Transmit_FS(usb_out, 3);
-//			HAL_Delay(50);
-//			move_angle(SERVO_ID, 40, 000, H_LED_BLUE);
-//			i = 0;
-//		}
+		if(get_status(SERVO_ID)) {
+			clear_error(SERVO_ID);
+			torque_on(SERVO_ID);
+			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+			HAL_Delay(1000);
+		}
+
+		if (i==50)
+		{
+			usb_out[0] = '<';
+			CDC_Transmit_FS(usb_out, 1);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, -10, 000, H_LED_WHITE);
+		}
+		if (i==100) {
+			usb_out[0] = '>';
+			CDC_Transmit_FS(usb_out, 1);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, 10, 000, H_LED_BLUE);
+			i = 0;
+		}
+
+		HAL_Delay(50);
+		i++;
+	}
 
 
 //		if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -250,19 +277,19 @@ int main(void) {
 //		CDC_Transmit_FS(usb_out, 1);
 //		HAL_Delay(50);
 //	}
-		if(usb_in[0] == 'x')
-		{
-			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-//			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
-			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
-			{
-				Error_Handler();
-			}
-			HAL_Delay(10);
-			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-			memset(usb_in, '\0', 64); // clear buffer
-			CDC_Transmit_FS("m", 1);
-		}
+//		if(usb_in[0] == 'x')
+//		{
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+////			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+//			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+//			{
+//				Error_Handler();
+//			}
+//			HAL_Delay(10);
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+//			memset(usb_in, '\0', 64); // clear buffer
+//			CDC_Transmit_FS("m", 1);
+//		}
 
 }
 
@@ -352,8 +379,6 @@ static void MX_I2C2_Init(void)
 	hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 	if (HAL_I2C_Init(&hi2c2) != HAL_OK)
 		Error_Handler();
-
-
 }
 
 static void MX_UART4_Init(void) {
@@ -367,7 +392,6 @@ static void MX_UART4_Init(void) {
 	huart4.Init.OverSampling = UART_OVERSAMPLING_16;
 	if (HAL_UART_Init(&huart4) != HAL_OK)
 		Error_Handler();
-
 }
 
 static void MX_GPIO_Init(void) {

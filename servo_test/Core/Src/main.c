@@ -31,9 +31,10 @@ uint8_t check = 0;
 #define RED_GPIO_PORT                          GPIOC
 #define BLUE_LED                               GPIO_PIN_15
 #define BLUE_GPIO_PORT                         GPIOB
+#define SERVO_ID							   4
 
 int main(void) {
-	HAL_Init();
++	HAL_Init();
 
 	SystemClock_Config();
 
@@ -72,9 +73,11 @@ int main(void) {
 //	uint8_t csend[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }; // Tx Buffer
 //
 //	uint16_t count = 0;
-
+	HAL_Delay(5000);
 	herkulex_init();
-
+	int i = 0;
+	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+	HAL_Delay(1000);
 	while (1) {
 //		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 //		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
@@ -111,11 +114,38 @@ int main(void) {
 //			HAL_GPIO_TogglePin(BLUE_GPIO_PORT, BLUE_LED);
 		//			count = 0;
 //		}
-		move_continuous(4, 500, H_LED_BLUE);
-		HAL_Delay(1000);
+//		move_continuous(4, 500, H_LED_BLUE);
+//		HAL_Delay(1000);
+
+
+		if(get_status(SERVO_ID)) {
+			clear_error(SERVO_ID);
+			torque_on(SERVO_ID);
+			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+			HAL_Delay(1000);
+		}
+
+		if (i==80)
+		{
+			usb_out[0] = '<';
+			CDC_Transmit_FS(usb_out, 3);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, -40, 000, H_LED_WHITE);
+		}
+		if (i==160) {
+			usb_out[0] = '>';
+			CDC_Transmit_FS(usb_out, 3);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, 40, 000, H_LED_BLUE);
+			i = 0;
+		}
+
+		HAL_Delay(50);
+		i++;
+	}
 //		get_position(253);
 
-	}
+
 
 }
 

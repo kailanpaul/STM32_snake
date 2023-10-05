@@ -51,7 +51,7 @@ int dec_angle;
 #define ANGLE_L 0x0E
 #define ANGLE_R 0x0F
 
-#define SERVO_ID 253
+#define SERVO_ID 4
 
 int main(void) {
 	HAL_Init();
