@@ -1,0 +1,11 @@
+.metadata/
+*/.settings/
+*.o
+*.elf
+*.list
+*.map
+*.cyclo
+*.su
+*.d
+*.launch
+*/Debug/
