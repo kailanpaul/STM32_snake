@@ -52,7 +52,7 @@ while True:
 while True:
     try:
         var = ser.read()
-        print(var)
+        print(int(var.decode())+10)
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break

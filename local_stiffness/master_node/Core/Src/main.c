@@ -60,7 +60,7 @@ int dec_angle;
 #define ANGLE_L 0x0E
 #define ANGLE_R 0x0F
 
-#define SERVO_ID 4
+#define SERVO_ID 253
 
 int main(void) {
 	HAL_Init();
@@ -216,16 +216,16 @@ int main(void) {
 
 		if (i==50)
 		{
-			usb_out[0] = '<';
+			usb_out[0] = '5';
 			CDC_Transmit_FS(usb_out, 1);
 			HAL_Delay(50);
-			move_angle(SERVO_ID, -10, 000, H_LED_WHITE);
+			move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
 		}
 		if (i==100) {
-			usb_out[0] = '>';
+			usb_out[0] = '9';
 			CDC_Transmit_FS(usb_out, 1);
 			HAL_Delay(50);
-			move_angle(SERVO_ID, 10, 000, H_LED_BLUE);
+			move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
 			i = 0;
 		}
 
