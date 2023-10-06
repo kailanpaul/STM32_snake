@@ -9,3 +9,4 @@
 *.d
 *.launch
 */Debug/
+*/.vscode/
