@@ -9,44 +9,39 @@ import sys
 import serial.tools.list_ports
 from time import sleep
 
-
-
 # sniff for devices
-while True:
-    try:
-        if os.name == 'nt':
-            com_list = [comport.device for comport in serial.tools.list_ports.comports()]
-            if len(com_list) == 0:
-                raise IndexError
-            else:
-                print("Picking first com port from list: ", com_list)
-                sleep(3)
-                try:
-                    ser = serial.Serial(str(com_list[0]), 9600)
-                    break
-                except serial.serialutil.SerialException:
-                    print("ACCESS DENIED WAH WAH WAH (remember to close other shells)")
-                    sleep(2)
-                    exit()
-        else:
-            ser = serial.Serial('/dev/ttyACM0')
-            break
-    except IndexError:
-        print("No devices detected. Retrying...")
-        sleep(2)
-        continue
+# while True:
+#     try:
+#         if os.name == 'nt':
+#             com_list = [comport.device for comport in serial.tools.list_ports.comports()]
+#             if len(com_list) == 0:
+#                 raise IndexError
+#             else:
+#                 print("Picking first com port from list: ", com_list)
+#                 sleep(3)
+#                 try:
+#                     ser = serial.Serial(str(com_list[0]), 9600)
+#                     break
+#                 except serial.serialutil.SerialException:
+#                     print("ACCESS DENIED WAH WAH WAH (remember to close other shells)")
+#                     sleep(2)
+#                     exit()
+#         else:
+#             ser = serial.Serial('/dev/ttyACM0')
+#             break
+#     except IndexError:
+#         print("No devices detected. Retrying...")
+#         sleep(2)
+#         continue
 
-# ser.write(b'x')
+# # ser.write(b'x')
 
-while True:
-    try:
-        print(ser.read())
-    except serial.serialutil.SerialException:
-        print("Device lost :( Exiting...")
-        break
-
-# ser.write(b'x')
-# print(ser.read())
+# while True:
+#     try:
+#         print(ser.read())
+#     except serial.serialutil.SerialException:
+#         print("Device lost :( Exiting...")
+#         break
 
 # define constants
 # gait parameters
@@ -55,17 +50,52 @@ omega = np.pi
 phi = -4.0144/9 * np.pi
 
 # simulation parameters
-dt = 0.1 
-t = 0
-# t_max = 10
-# t = np.linspace(dt, t_max, int(t_max/dt))
+dt = 0.1
+t_start = 0
+t_max = 10
+t = np.linspace(t_start, t_max, int(t_max/dt)+1)
 # x_points = np.linspace(0, 13, 14)
+
+K_p = 60 # Nm/rad
+K_D = 25 # Nms/rad
+# J_l = 1.52e-5 kgm**2
+# J_r = 2.45e-7 kgm**2 for eg
 
 # iterate over range with floats
 def range_with_floats(start, stop, step):
     while stop > start:
         yield start
         start += step
+        
+# takes servo position and angular velocity, and desired position and velocity, to calculate U, the control input torque
+def force_controller(servo_pos, servo_vel, desired_pos, desired_vel):
+    return np.array(-K_p*(servo_pos-desired_pos)-K_D*(servo_vel-desired_vel))
+
+
+# gait pattern generator: generates joint angles to achieve pose corresponding to time step
+def gpg(t):
+    points = [0] * 14
+    desired_pos = [0] * 12
+
+    # get points on sine wave for 12 links
+    for i in range(1, 15):
+        points_i = A*np.sin(t*omega + phi*(i-1))
+        points[i-1] = round(points_i, 3)
+
+    # print(points)
+
+    # get gradients of links
+    m = [0] * 13
+    for l in range(0, len(points)-1):
+        m[l] = round(points[l+1]-points[l], 3)
+
+    # print(m)
+
+    # get desired joint angles in radians from link gradients using trig identity
+    for k in range(0, len(m)-1):
+        desired_pos[k] = round(np.radians(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
+        
+    return desired_pos
 
 # max_curr = 0
 # max_prev = 0
@@ -79,28 +109,29 @@ def range_with_floats(start, stop, step):
     # ax.set_aspect('equal', adjustable='box')
     # ax.clear()
 
-points = [0] * 14
-alpha_desired = [0] * 12
+# points = [0] * 14
+# alpha_desired = [0] * 12
 
-# get points on sine wave for 12 links
-for i in range(1, 15):
-    points_i = A*np.sin(t*omega + phi*(i-1))
-    points[i-1] = round(points_i, 3)
+# # get points on sine wave for 12 links
+# for i in range(1, 15):
+#     points_i = A*np.sin(t*omega + phi*(i-1))
+#     points[i-1] = round(points_i, 3)
 
-# print(points)
+# # print(points)
 
-# get gradients of links
-m = [0] * 13
-for l in range(0, len(points)-1):
-    m[l] = round(points[l+1]-points[l], 3)
+# # get gradients of links
+# m = [0] * 13
+# for l in range(0, len(points)-1):
+#     m[l] = round(points[l+1]-points[l], 3)
 
-# print(m)
+# # print(m)
 
-# get desired joint angles from link gradients using trig identity
-for k in range(0, len(m)-1):
-    alpha_desired[k] = round(np.rad2deg(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
+# # get desired joint angles from link gradients using trig identity
+# for k in range(0, len(m)-1):
+#     alpha_desired[k] = round(np.rad2deg(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
 
-# print(alpha_desired)
+# print("Joint angles for t=0s (degrees): ", gpg(0))
+# print("Joint angles for t=0s (degrees): ", gpg(0.1))
     # print("\n")
 
     # check and update greatest joint angle
@@ -118,3 +149,61 @@ for k in range(0, len(m)-1):
 
 # print("Max angle experienced is: ", max_curr, "degrees")
 
+# print("Controller output (Nm): ", U)
+
+# Motor parameters
+J = 0.4  # Moment of inertia in kgm**2
+
+# Simulation parameters
+duration = 5  # Duration of the simulation (seconds)
+sampling_rate = 50  # Number of time steps per second
+time_steps = int(duration * sampling_rate)
+time = np.linspace(0, duration, time_steps)
+delta_t = time[1] - time[0]
+
+initial_pos = gpg(t[11])
+desired_pos = gpg(t[12]) 
+desired_vel = (np.array(desired_pos) - np.array(initial_pos)) / dt # rad/s
+
+# Initialize variables
+servo_pos = np.zeros(12)  # Initial servo position (rad), initial servo velocity (rad/s) and acceleration
+servo_vel = np.zeros(12)
+alpha = np.zeros(12)
+
+# Lists to store angular position and velocity values
+servo_positions = np.array([servo_pos])
+servo_velocities = np.array([servo_vel])
+
+# Simulate 
+for t in time[1:]:
+    # Calculate torque command: heavyside step at 3 seconds
+    if t < 3:
+        tau = np.zeros(12)
+    # elif t == 3:
+    #     tau = force_controller(servo_pos, servo_vel, desired_pos, desired_vel)
+    # else:
+    #     tau = force_controller(servo_pos, servo_vel, desired_pos, np.zeros(12))
+    else:
+        desired_vel = (desired_pos - servo_pos) * desired_vel # make the speed proportional to the error
+        tau = force_controller(servo_pos, servo_vel, desired_pos, desired_vel) 
+
+    # Calculate angular acceleration using the (simple) motor dynamics equation
+    alpha = tau / J
+    
+    # Update angular velocity and position using numerical integration
+    servo_vel += alpha * delta_t
+    servo_pos += servo_vel * delta_t
+    
+    # Append values to the lists
+    servo_positions = np.vstack([servo_positions, servo_pos]) # this would actually be the position command
+    servo_velocities = np.vstack([servo_velocities, servo_vel])
+
+print(desired_pos)
+print(servo_pos) 
+
+plt.plot(time[:-3], servo_positions[3:])
+plt.xlabel('Time (s)')
+plt.ylabel('Angular Position (radians)')
+plt.title('Angular Position vs. Time')
+plt.grid(True)
+plt.show()
