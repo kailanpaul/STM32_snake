@@ -2,7 +2,6 @@ import serial
 import os
 import serial.tools.list_ports
 from time import sleep
-import struct
 
 var = 0
 
@@ -14,45 +13,49 @@ while True:
             if len(com_list) == 0:
                 raise IndexError
             else:
-                print("Picking first com port from list: ", com_list)
-                sleep(3)
+                print("Using port: ", com_list[0])
                 try:
-                    ser = serial.Serial(str(com_list[0]), 9600)
+                    ser = serial.Serial(str(com_list[0]), write_timeout=0)
                     break
                 except serial.serialutil.SerialException:
                     print("ACCESS DENIED WAH WAH WAH (remember to close other shells)")
-                    sleep(2)
                     exit()
         else:
-            ser = serial.Serial('/dev/ttyACM0')
-            break
+            try:
+                ser = serial.Serial('/dev/ttyACM0')
+            except serial.serialutil.SerialException:
+                raise IndexError
     except IndexError:
         print("No devices detected. Retrying...")
         sleep(2)
         continue
 
-# ser.write(b'x')
-
-# print what is read from USB until port is closed
-# while True:
-#     try:
-#         print(ser.read())
-#     except serial.serialutil.SerialException:
-#         print("Device lost :( Exiting...")
-#         break
-
-# string = b''
-
-# angle_command = int(input("Give an angle command between 0 and 50 degrees: "))
-
-# string += struct.pack('!B', angle_command)
-
-# ser.write(string)
-# print(string)
+# only send
 while True:
     try:
-        var = ser.read()
-        print(int(var.decode())+10)
+        ser.write(str(input(">> ")).encode())
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break
+ser.close()
+
+# only listen
+# while True:
+#     try:
+#         var = ser.read()
+#         print(var.decode())
+#     except serial.serialutil.SerialException:
+#         print("Device lost :( Exiting...")
+#         break
+# ser.close()
+
+# send and listen
+# while True:
+#     ser.write(str(input(">> ")).encode())
+#     try:
+#         var = ser.read()
+#         print(var.decode())
+#     except serial.serialutil.SerialException:
+#         print("Device lost :( Exiting...")
+#         break
+# ser.close()

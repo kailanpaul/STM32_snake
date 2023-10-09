@@ -73,7 +73,7 @@ int main(void)
 		Error_Handler();
 	}
 
-	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+//	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
 
 //	uint16_t count = 0;
 
@@ -103,8 +103,8 @@ int main(void)
 //			}
 			HAL_Delay(10);
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-			memset(usb_in, '\0', 64); // clear buffer
 			CDC_Transmit_FS("m", 1);
+			memset(usb_in, '\0', 64); // clear buffer
 		}
 
 //		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message

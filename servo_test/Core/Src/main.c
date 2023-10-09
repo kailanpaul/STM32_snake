@@ -31,10 +31,10 @@ uint8_t check = 0;
 #define RED_GPIO_PORT                          GPIOC
 #define BLUE_LED                               GPIO_PIN_15
 #define BLUE_GPIO_PORT                         GPIOB
-#define SERVO_ID							   4
+#define SERVO_ID							   253
 
 int main(void) {
-+	HAL_Init();
+ 	HAL_Init();
 
 	SystemClock_Config();
 
