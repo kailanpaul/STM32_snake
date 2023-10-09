@@ -8,6 +8,7 @@ import os
 import sys
 import serial.tools.list_ports
 from time import sleep
+from sklearn.preprocessing import normalize
 
 # sniff for devices
 # while True:
@@ -152,7 +153,7 @@ def gpg(t):
 # print("Controller output (Nm): ", U)
 
 # Motor parameters
-J = 0.4  # Moment of inertia in kgm**2
+J = 2  # Moment of inertia in kgm**2
 
 # Simulation parameters
 duration = 5  # Duration of the simulation (seconds)
@@ -161,12 +162,13 @@ time_steps = int(duration * sampling_rate)
 time = np.linspace(0, duration, time_steps)
 delta_t = time[1] - time[0]
 
-initial_pos = gpg(t[11])
-desired_pos = gpg(t[12]) 
-desired_vel = (np.array(desired_pos) - np.array(initial_pos)) / dt # rad/s
+initial_pos = np.array(gpg(t[11]))
+desired_pos = np.array(gpg(t[12]))
+desired_vel = (desired_pos -initial_pos) / dt # rad/s
 
 # Initialize variables
-servo_pos = np.zeros(12)  # Initial servo position (rad), initial servo velocity (rad/s) and acceleration
+# Initial servo position (rad), initial servo velocity (rad/s) and acceleration
+servo_pos = initial_pos 
 servo_vel = np.zeros(12)
 alpha = np.zeros(12)
 
@@ -179,13 +181,12 @@ for t in time[1:]:
     # Calculate torque command: heavyside step at 3 seconds
     if t < 3:
         tau = np.zeros(12)
-    # elif t == 3:
-    #     tau = force_controller(servo_pos, servo_vel, desired_pos, desired_vel)
-    # else:
-    #     tau = force_controller(servo_pos, servo_vel, desired_pos, np.zeros(12))
     else:
-        desired_vel = (desired_pos - servo_pos) * desired_vel # make the speed proportional to the error
-        tau = force_controller(servo_pos, servo_vel, desired_pos, desired_vel) 
+        # err_norm = ((np.sum(abs(desired_pos-servo_pos)))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+        err_norm = ((abs(desired_pos-servo_pos))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+        new_desired_vel = err_norm * desired_vel    # make the speed proportional to the normalised error 
+                                                    # (max vel when err is max, 0 vel when err is 0)
+        tau = force_controller(servo_pos, servo_vel, desired_pos, new_desired_vel)  
 
     # Calculate angular acceleration using the (simple) motor dynamics equation
     alpha = tau / J
@@ -199,7 +200,8 @@ for t in time[1:]:
     servo_velocities = np.vstack([servo_velocities, servo_vel])
 
 print(desired_pos)
-print(servo_pos) 
+print(np.round(servo_pos, 4))
+print("Error: ", desired_pos-servo_pos)
 
 plt.plot(time[:-3], servo_positions[3:])
 plt.xlabel('Time (s)')
@@ -207,3 +209,4 @@ plt.ylabel('Angular Position (radians)')
 plt.title('Angular Position vs. Time')
 plt.grid(True)
 plt.show()
+
