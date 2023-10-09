@@ -31,13 +31,13 @@ while True:
         continue
 
 # only send
-while True:
-    try:
-        ser.write(str(input(">> ")).encode())
-    except serial.serialutil.SerialException:
-        print("Device lost :( Exiting...")
-        break
-ser.close()
+# while True:
+#     try:
+#         ser.write(str(input(">> ")).encode())
+#     except serial.serialutil.SerialException:
+#         print("Device lost :( Exiting...")
+#         break
+# ser.close()
 
 # only listen
 # while True:
@@ -50,12 +50,12 @@ ser.close()
 # ser.close()
 
 # send and listen
-# while True:
-#     ser.write(str(input(">> ")).encode())
-#     try:
-#         var = ser.read()
-#         print(var.decode())
-#     except serial.serialutil.SerialException:
-#         print("Device lost :( Exiting...")
-#         break
-# ser.close()
+while True:
+    ser.write(str(input(">> ")).encode())
+    try:
+        var = ser.read()
+        print(var.decode())
+    except serial.serialutil.SerialException:
+        print("Device lost :( Exiting...")
+        break
+ser.close()

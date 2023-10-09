@@ -171,7 +171,8 @@ int main(void)
   {
 //--------------------------------------------------------------------------------
 
-//		if(usb_in[0] == 'x')
+  	// echo first character of string received over USB
+//		if(usb_in[0] != '\0')
 //		{
 //			usb_out[0] = usb_in[0];
 //			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
@@ -186,6 +187,7 @@ int main(void)
 //		HAL_Delay(100); // let the serial monitor catch up
 //		herkulex_init();
 //
+//  	// start from 0 deg
 //		if(get_status(SERVO_ID)) {
 //			clear_error(SERVO_ID);
 //			torque_on(SERVO_ID);
@@ -195,6 +197,7 @@ int main(void)
 //
 //		int i = 0;
 //
+//		// oscillate between -45 and 45 deg and send a '<' or '>' over serial
 //		while (1) {
 //
 //			if (i==50)
@@ -221,6 +224,7 @@ int main(void)
 		HAL_Delay(100); // let the serial monitor catch up
 		herkulex_init();
 
+		// start from 0 deg
 		if(get_status(SERVO_ID)) {
 			clear_error(SERVO_ID);
 			torque_on(SERVO_ID);
@@ -231,12 +235,14 @@ int main(void)
 		while (1)
 		{
 
+			// rotate -45 deg if < is received from PC
 			if (usb_in[0] == '<')
 			{
 				move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
 				memset(usb_in, '\0', 64);
 			}
 
+			// rotate 45 deg if > is received from PC
 			if (usb_in[0] == '>')
 			{
 				move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
@@ -304,36 +310,21 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-static void MX_CAN1_Init(void)
-{
-
-  /* USER CODE BEGIN CAN1_Init 0 */
-
-  /* USER CODE END CAN1_Init 0 */
-
-  /* USER CODE BEGIN CAN1_Init 1 */
-
-  /* USER CODE END CAN1_Init 1 */
-  hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 9;
-  hcan1.Init.Mode = CAN_MODE_NORMAL;
-  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_5TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
-  hcan1.Init.TimeTriggeredMode = DISABLE;
-  hcan1.Init.AutoBusOff = DISABLE;
-  hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
-  hcan1.Init.ReceiveFifoLocked = DISABLE;
-  hcan1.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CAN1_Init 2 */
-
-  /* USER CODE END CAN1_Init 2 */
-
+static void MX_CAN1_Init(void) {
+	hcan1.Instance = CAN1;
+	hcan1.Init.Prescaler = 9;
+	hcan1.Init.Mode = CAN_MODE_NORMAL;
+	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; //10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	hcan1.Init.TimeTriggeredMode = DISABLE;
+	hcan1.Init.AutoBusOff = DISABLE;
+	hcan1.Init.AutoWakeUp = DISABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;
+	hcan1.Init.ReceiveFifoLocked = DISABLE;
+	hcan1.Init.TransmitFifoPriority = DISABLE;
+	if (HAL_CAN_Init(&hcan1) != HAL_OK)
+		Error_Handler();
 }
 
 /**
