@@ -121,6 +121,7 @@ void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED) {
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
+// play time calc: uint8_t playtime = uint8_t(time_ms / 11.2f);
 void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
 		uint8_t i_LED) {
 	uint8_t data[5];
@@ -157,6 +158,7 @@ void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
+// play time calc: uint8_t playtime = uint8_t(time_ms / 11.2f);
 void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED) {
 	if (angle > 160.0 || angle < -160.0)
 		return;
@@ -262,13 +264,13 @@ uint8_t get_status(uint8_t servo_ID) {
 	return r_data[0];
 }
 
-// get Position
+// get position
 uint16_t get_position(uint8_t servo_ID) {
 	uint16_t position = 0;
 
 	uint8_t data[2];
 	data[0] = 0x3A; // 8. Address
-	data[1] = 0x02; // 9. Lenght
+	data[1] = 0x02; // 9. Length
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
@@ -280,18 +282,37 @@ uint16_t get_position(uint8_t servo_ID) {
 	return position;
 }
 
+// get position in bytes
+void get_position_bytes(uint8_t servo_ID, uint8_t *data_array) {
+
+	uint8_t data[2];
+//	data[0] = 0x3A; // 8. Address, 58, calibrated position data
+	data[0] = 0x3C; // 8. Address, 60, absolute position data
+	data[1] = 0x02; // 9. Length
+
+	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
+
+	uint8_t r_data[6];
+	read_data(r_data, sizeof(r_data));
+
+//	position = ((r_data[3] & 0x03) << 8) | r_data[2];
+	data_array[0] = r_data[2];
+	data_array[1] = r_data[3];
+}
+
+// returns servo angle in degrees
 float get_angle(uint8_t servo_ID) {
 	int pos = (int) get_position(servo_ID);
 	return (pos - 512) * 0.325;
 }
 
-// get the speed for one servo - values betweeb -1023 <--> 1023
+// get the speed for one servo - values between -1023 <--> 1023
 uint16_t get_speed(uint8_t servo_ID) {
 	uint16_t speed = 0;
 
 	uint8_t data[2];
 	data[0] = 0x40; // 8. Address
-	data[1] = 0x02; // 9. Lenght
+	data[1] = 0x02; // 9. Length
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
@@ -321,7 +342,7 @@ uint8_t checksum2(uint8_t XOR) {
 void set_ACK(uint8_t servo_ID, uint8_t val) {
 	uint8_t data[3];
 	data[0] = 0x34; // 8. Address
-	data[1] = 0x01; // 9. Lenght
+	data[1] = 0x01; // 9. Length
 	data[2] = val;// 10.Value. 0=No Replay, 1=Only reply to READ CMD, 2=Always reply
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
@@ -332,7 +353,7 @@ void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
 		uint8_t write_byte) {
 	uint8_t data[3];
 	data[0] = address;	  // 8. Address
-	data[1] = 0x01;		  // 9. Lenght
+	data[1] = 0x01;		  // 9. Length
 	data[2] = write_byte; // 10. Write error=0
 
 	send_data(memory, servo_ID, data, sizeof(data));

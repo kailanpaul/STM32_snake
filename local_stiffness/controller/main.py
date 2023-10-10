@@ -94,7 +94,7 @@ def gpg(t):
 
     # get desired joint angles in radians from link gradients using trig identity
     for k in range(0, len(m)-1):
-        desired_pos[k] = round(np.radians(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
+        desired_pos[k] = round(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k]), 3)
         
     return desired_pos
 
@@ -153,7 +153,7 @@ def gpg(t):
 # print("Controller output (Nm): ", U)
 
 # Motor parameters
-J = 2  # Moment of inertia in kgm**2
+J = 1  # Moment of inertia in kgm**2
 
 # Simulation parameters
 duration = 5  # Duration of the simulation (seconds)
@@ -162,17 +162,17 @@ time_steps = int(duration * sampling_rate)
 time = np.linspace(0, duration, time_steps)
 delta_t = time[1] - time[0]
 
-initial_pos = np.array(gpg(t[11]))
-desired_pos = np.array(gpg(t[12]))
-desired_vel = (desired_pos -initial_pos) / dt # rad/s
+initial_pos = np.array(gpg(t[10])) # initial pose at one second
+desired_pos = np.array(gpg(t[15])) # pose at 1.5 sec (after 5*dt seconds)
+desired_vel = (desired_pos - initial_pos) / (dt*5) # rad/s
 
 # Initialize variables
 # Initial servo position (rad), initial servo velocity (rad/s) and acceleration
-servo_pos = initial_pos 
+servo_pos = initial_pos # set initial servo position to the initial position
 servo_vel = np.zeros(12)
 alpha = np.zeros(12)
 
-# Lists to store angular position and velocity values
+# Numpy arrays to store angular position and velocity values
 servo_positions = np.array([servo_pos])
 servo_velocities = np.array([servo_vel])
 
@@ -183,7 +183,9 @@ for t in time[1:]:
         tau = np.zeros(12)
     else:
         # err_norm = ((np.sum(abs(desired_pos-servo_pos)))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
-        err_norm = ((abs(desired_pos-servo_pos))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+        # err_norm = (((desired_pos-servo_pos))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+        err_norm = np.divide((desired_pos - servo_pos), abs(desired_pos - initial_pos))
+        # print(err_norm)
         new_desired_vel = err_norm * desired_vel    # make the speed proportional to the normalised error 
                                                     # (max vel when err is max, 0 vel when err is 0)
         tau = force_controller(servo_pos, servo_vel, desired_pos, new_desired_vel)  
@@ -199,9 +201,10 @@ for t in time[1:]:
     servo_positions = np.vstack([servo_positions, servo_pos]) # this would actually be the position command
     servo_velocities = np.vstack([servo_velocities, servo_vel])
 
-print(desired_pos)
-print(np.round(servo_pos, 4))
-print("Error: ", desired_pos-servo_pos)
+# print(initial_pos)
+# print(desired_pos)
+# print(np.round(servo_pos, 4))
+# print("Error: ", desired_pos-servo_pos)
 
 plt.plot(time[:-3], servo_positions[3:])
 plt.xlabel('Time (s)')

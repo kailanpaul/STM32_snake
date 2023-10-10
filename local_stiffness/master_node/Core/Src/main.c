@@ -77,8 +77,15 @@ static void MX_I2C3_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
-
+void echo(void);
+void oscillate(int angle, int period);
+void serial_pos_command();
 void Error_Handler(void);
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
 
 //uint8_t IMU_address =  0b01101100; //left shifted by 1 - not sure why
 //uint8_t I2C_buffer[1];
@@ -91,10 +98,123 @@ void Error_Handler(void);
 //int deg_angle;
 //int dec_angle;
 
-/* USER CODE END PFP */
+// echo first character of string received over USB
+void echo(void)
+{
+	if(usb_in[0] != '\0')
+	{
+		usb_out[0] = usb_in[0];
+		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+		HAL_Delay(10);
+		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+		CDC_Transmit_FS(usb_out, 1);
+		memset(usb_in, '\0', 64); // clear buffer
+	}
+}
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+void oscillate_and_send(int angle, int period)
+{
+	HAL_Delay(100); // let the serial monitor catch up
+	herkulex_init();
+
+	// start from 0 deg
+	if(get_status(SERVO_ID)) {
+		clear_error(SERVO_ID);
+		torque_on(SERVO_ID);
+		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+		HAL_Delay(50);
+	}
+
+	int i = 0;
+
+	// oscillate between +/- angle deg and send a '<' or '>' over serial
+	while (1) {
+
+		if (i==period)
+		{
+			usb_out[0] = '<';
+			CDC_Transmit_FS(usb_out, 1);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
+		}
+		if (i==period*2) {
+			usb_out[0] = '>';
+			CDC_Transmit_FS(usb_out, 1);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
+			i = 0;
+		}
+
+		HAL_Delay(50);
+		i++;
+	}
+}
+
+void oscillate(int angle, int period)
+{
+	HAL_Delay(100); // let the serial monitor catch up
+	herkulex_init();
+
+	// start from 0 deg
+	if(get_status(SERVO_ID)) {
+		clear_error(SERVO_ID);
+		torque_on(SERVO_ID);
+		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+		HAL_Delay(50);
+	}
+
+	int i = 0;
+
+	// oscillate between +/- angle deg and send a '<' or '>' over serial
+	while (1) {
+
+		if (i==period)
+		{
+			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
+		}
+
+		if (i==period*2) {
+			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
+			i = 0;
+		}
+
+		HAL_Delay(50);
+		i++;
+	}
+}
+
+void serial_pos_command()
+{
+	HAL_Delay(100); // let the serial monitor catch up
+	herkulex_init();
+
+	// start from 0 deg
+	if(get_status(SERVO_ID)) {
+		clear_error(SERVO_ID);
+		torque_on(SERVO_ID);
+		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+		HAL_Delay(50);
+	}
+
+	while (1)
+	{
+		// rotate -45 deg if < is received from PC
+		if (usb_in[0] == '<')
+		{
+			move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
+			memset(usb_in, '\0', 64);
+		}
+
+		// rotate 45 deg if > is received from PC
+		if (usb_in[0] == '>')
+		{
+			move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
+			memset(usb_in, '\0', 64);
+		}
+
+		HAL_Delay(50);
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -163,96 +283,80 @@ int main(void)
 	{
 		Error_Handler();
 	}
+
+//	usb_out[2] = '\r';
+//	usb_out[3] = '\n';
+
+	HAL_Delay(5000);
+
+	herkulex_init();
+
+	if(get_status(SERVO_ID)) {
+		clear_error(SERVO_ID);
+		torque_on(SERVO_ID);
+		move_angle(SERVO_ID, 0, 50, H_LED_GREEN);
+		HAL_Delay(500);
+	}
+
+	uint8_t position_bytes_array[2];
+	int i = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//--------------------------------------------------------------------------------
 
-  	// echo first character of string received over USB
-//		if(usb_in[0] != '\0')
-//		{
-//			usb_out[0] = usb_in[0];
-//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-//			HAL_Delay(10);
-//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-//			CDC_Transmit_FS(usb_out, 1);
-//			memset(usb_in, '\0', 64); // clear buffer
-//		}
+//  	echo();
 
-//--------------------------------------------------------------------------------
+//  	oscillate(45, 50);
 
-//		HAL_Delay(100); // let the serial monitor catch up
-//		herkulex_init();
-//
-//  	// start from 0 deg
-//		if(get_status(SERVO_ID)) {
-//			clear_error(SERVO_ID);
-//			torque_on(SERVO_ID);
-//			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-//			HAL_Delay(50);
-//		}
-//
-//		int i = 0;
-//
-//		// oscillate between -45 and 45 deg and send a '<' or '>' over serial
-//		while (1) {
-//
-//			if (i==50)
-//			{
-//				usb_out[0] = '<';
-//				CDC_Transmit_FS(usb_out, 1);
-//				HAL_Delay(50);
-//				move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
-//			}
-//			if (i==100) {
-//				usb_out[0] = '>';
-//				CDC_Transmit_FS(usb_out, 1);
-//				HAL_Delay(50);
-//				move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
-//				i = 0;
-//			}
-//
-//			HAL_Delay(50);
-//			i++;
-//		}
+//  	serial_pos_command();
 
-	  //--------------------------------------------------------------------------------
+		get_position_bytes(SERVO_ID, position_bytes_array);
+		usb_out[0] = position_bytes_array[0];
+		usb_out[1] = position_bytes_array[1];
+		CDC_Transmit_FS(usb_out, 2);
+		HAL_Delay(100);
 
-		HAL_Delay(100); // let the serial monitor catch up
-		herkulex_init();
-
-		// start from 0 deg
-		if(get_status(SERVO_ID)) {
-			clear_error(SERVO_ID);
-			torque_on(SERVO_ID);
-			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-			HAL_Delay(50);
-		}
-
-		while (1)
+		if (i==25)
 		{
-
-			// rotate -45 deg if < is received from PC
-			if (usb_in[0] == '<')
-			{
-				move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
-				memset(usb_in, '\0', 64);
-			}
-
-			// rotate 45 deg if > is received from PC
-			if (usb_in[0] == '>')
-			{
-				move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
-				memset(usb_in, '\0', 64);
-			}
-
-			HAL_Delay(50);
+			move_angle(SERVO_ID, -135, 50, H_LED_WHITE);
 		}
 
-	  //--------------------------------------------------------------------------------
+		if (i==50)
+		{
+			move_angle(SERVO_ID, -90, 50, H_LED_WHITE);
+		}
+
+		if (i==75)
+		{
+			move_angle(SERVO_ID, -45, 50, H_LED_WHITE);
+		}
+
+		if (i==100)
+		{
+			move_angle(SERVO_ID, 0, 50, H_LED_WHITE);
+		}
+
+		if (i==125) {
+			move_angle(SERVO_ID, 45, 50, H_LED_GREEN);
+		}
+
+		if (i==150)
+		{
+			move_angle(SERVO_ID, 90, 50, H_LED_WHITE);
+		}
+
+		if (i==175) {
+			move_angle(SERVO_ID, 135, 50, H_LED_BLUE);
+			i = 0;
+		}
+
+		HAL_Delay(50);
+		i++;
+
 	/* USER CODE END WHILE */
 
 	/* USER CODE BEGIN 3 */

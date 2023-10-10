@@ -3,8 +3,6 @@ import os
 import serial.tools.list_ports
 from time import sleep
 
-var = 0
-
 # sniff for devices
 while True:
     try:
@@ -15,7 +13,7 @@ while True:
             else:
                 print("Using port: ", com_list[0])
                 try:
-                    ser = serial.Serial(str(com_list[0]), write_timeout=0)
+                    ser = serial.Serial(str(com_list[0]), write_timeout=0, parity=serial.PARITY_NONE)
                     break
                 except serial.serialutil.SerialException:
                     print("ACCESS DENIED WAH WAH WAH (remember to close other shells)")
@@ -29,7 +27,6 @@ while True:
         print("No devices detected. Retrying...")
         sleep(2)
         continue
-
 # only send
 # while True:
 #     try:
@@ -40,7 +37,22 @@ while True:
 # ser.close()
 
 # only listen
+while True:
+    try:
+        data = ser.read(2)
+        pos_packet = [b for b in data]
+        # var = var.decode('ascii')
+        servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 642) * 0.325
+        print(((pos_packet[1] & 0x03) << 8) | pos_packet[0])
+
+    except serial.serialutil.SerialException:
+        print("Device lost :( Exiting...")
+        break
+ser.close()
+
+# send and listen
 # while True:
+#     ser.write(str(input(">> ")).encode())
 #     try:
 #         var = ser.read()
 #         print(var.decode())
@@ -48,14 +60,3 @@ while True:
 #         print("Device lost :( Exiting...")
 #         break
 # ser.close()
-
-# send and listen
-while True:
-    ser.write(str(input(">> ")).encode())
-    try:
-        var = ser.read()
-        print(var.decode())
-    except serial.serialutil.SerialException:
-        print("Device lost :( Exiting...")
-        break
-ser.close()

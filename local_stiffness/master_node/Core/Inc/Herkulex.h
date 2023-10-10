@@ -45,6 +45,7 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED);
 
 uint8_t get_status(uint8_t servo_ID);
 uint16_t get_position(uint8_t servo_ID);
+void get_position_bytes(uint8_t servo_ID, uint8_t* data_array);
 float get_angle(uint8_t servo_ID);
 uint16_t get_speed(uint8_t servo_ID);
 
