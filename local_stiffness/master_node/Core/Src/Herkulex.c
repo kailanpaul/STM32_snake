@@ -296,8 +296,8 @@ void get_position_bytes(uint8_t servo_ID, uint8_t *data_array) {
 	read_data(r_data, sizeof(r_data));
 
 //	position = ((r_data[3] & 0x03) << 8) | r_data[2];
-	data_array[0] = r_data[2];
-	data_array[1] = r_data[3];
+	data_array[0] = r_data[3];
+	data_array[1] = r_data[4];
 }
 
 // returns servo angle in degrees

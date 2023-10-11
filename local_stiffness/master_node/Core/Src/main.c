@@ -62,7 +62,7 @@ uint8_t CAN_RX_buffer[8];  //CAN Bus Receive Buffer
 CAN_FilterTypeDef canfil; //CAN Bus Filter
 uint32_t canMailbox; //CAN Bus Mail box variable
 
-uint8_t usb_in[1];
+uint8_t usb_in[2];
 uint8_t usb_out[18];
 uint16_t len = sizeof(usb_out) / sizeof(usb_out[0]);
 /* USER CODE END PV */
@@ -98,6 +98,17 @@ void Error_Handler(void);
 //int deg_angle;
 //int dec_angle;
 
+// if there's a servo, zero it
+void init_zero_pos()
+{
+	if(get_status(SERVO_ID)) {
+		clear_error(SERVO_ID);
+		torque_on(SERVO_ID);
+		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+		HAL_Delay(50);
+	}
+}
+
 // echo first character of string received over USB
 void echo(void)
 {
@@ -112,22 +123,17 @@ void echo(void)
 	}
 }
 
+// oscillate between +/- angle deg and send a '<' or '>' over serial
 void oscillate_and_send(int angle, int period)
 {
 	HAL_Delay(100); // let the serial monitor catch up
 	herkulex_init();
 
 	// start from 0 deg
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-		HAL_Delay(50);
-	}
+	init_zero_pos();
 
 	int i = 0;
 
-	// oscillate between +/- angle deg and send a '<' or '>' over serial
 	while (1) {
 
 		if (i==period)
@@ -150,22 +156,15 @@ void oscillate_and_send(int angle, int period)
 	}
 }
 
+// oscillate between +/- angle
 void oscillate(int angle, int period)
 {
-	HAL_Delay(100); // let the serial monitor catch up
-	herkulex_init();
 
 	// start from 0 deg
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-		HAL_Delay(50);
-	}
+	init_zero_pos();
 
 	int i = 0;
 
-	// oscillate between +/- angle deg and send a '<' or '>' over serial
 	while (1) {
 
 		if (i==period)
@@ -183,18 +182,12 @@ void oscillate(int angle, int period)
 	}
 }
 
+// rotate servo left and right for '<' and '>' received over serial
 void serial_pos_command()
 {
-	HAL_Delay(100); // let the serial monitor catch up
-	herkulex_init();
 
 	// start from 0 deg
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-		HAL_Delay(50);
-	}
+	init_zero_pos();
 
 	while (1)
 	{
@@ -214,6 +207,18 @@ void serial_pos_command()
 
 		HAL_Delay(50);
 	}
+}
+
+// get the servo position (raw, bytes) and send over serial
+// must be converted to raw 10-bit or angle on the receiving end
+void serial_send_pos()
+{
+	uint8_t position_bytes_array[2]; // position data is contained in 2 bytes
+	get_position_bytes(SERVO_ID, position_bytes_array);
+	usb_out[0] = position_bytes_array[0];
+	usb_out[1] = position_bytes_array[1];
+	CDC_Transmit_FS(usb_out, 2);
+	HAL_Delay(100);
 }
 
 /* USER CODE END 0 */
@@ -291,15 +296,9 @@ int main(void)
 
 	herkulex_init();
 
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 50, H_LED_GREEN);
-		HAL_Delay(500);
-	}
+	init_zero_pos();
 
-	uint8_t position_bytes_array[2];
-	int i = 0;
+	int command = 0;
 
   /* USER CODE END 2 */
 
@@ -314,48 +313,18 @@ int main(void)
 
 //  	serial_pos_command();
 
-		get_position_bytes(SERVO_ID, position_bytes_array);
-		usb_out[0] = position_bytes_array[0];
-		usb_out[1] = position_bytes_array[1];
-		CDC_Transmit_FS(usb_out, 2);
-		HAL_Delay(100);
+//  	serial_send_pos();
 
-		if (i==25)
-		{
-			move_angle(SERVO_ID, -135, 50, H_LED_WHITE);
-		}
+  	if (usb_in[0] != 0 || usb_in[1] != 0)
+  	{
+  		command = ((usb_in[1] & 0xFF) << 8) | usb_in[0];
+			move_positional(SERVO_ID, command, 000, H_LED_WHITE);
+			HAL_Delay(50);
+			memset(usb_in, '\0', 64);
+  	}
 
-		if (i==50)
-		{
-			move_angle(SERVO_ID, -90, 50, H_LED_WHITE);
-		}
+		HAL_Delay(950);
 
-		if (i==75)
-		{
-			move_angle(SERVO_ID, -45, 50, H_LED_WHITE);
-		}
-
-		if (i==100)
-		{
-			move_angle(SERVO_ID, 0, 50, H_LED_WHITE);
-		}
-
-		if (i==125) {
-			move_angle(SERVO_ID, 45, 50, H_LED_GREEN);
-		}
-
-		if (i==150)
-		{
-			move_angle(SERVO_ID, 90, 50, H_LED_WHITE);
-		}
-
-		if (i==175) {
-			move_angle(SERVO_ID, 135, 50, H_LED_BLUE);
-			i = 0;
-		}
-
-		HAL_Delay(50);
-		i++;
 
 	/* USER CODE END WHILE */
 

@@ -1,4 +1,5 @@
 import serial
+import sys
 import os
 import serial.tools.list_ports
 from time import sleep
@@ -27,28 +28,29 @@ while True:
         print("No devices detected. Retrying...")
         sleep(2)
         continue
-# only send
-# while True:
-#     try:
-#         ser.write(str(input(">> ")).encode())
-#     except serial.serialutil.SerialException:
-#         print("Device lost :( Exiting...")
-#         break
-# ser.close()
 
-# only listen
+# only send
 while True:
     try:
-        data = ser.read(2)
-        pos_packet = [b for b in data]
-        # var = var.decode('ascii')
-        servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 642) * 0.325
-        print(((pos_packet[1] & 0x03) << 8) | pos_packet[0])
-
+        command_deg = float(input(">> "))
+        command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little')
+        ser.write(command_raw)
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break
 ser.close()
+
+# only listen
+# while True:
+#     try:
+#         data = ser.read(2) # read 2 bytes
+#         pos_packet = [b for b in data]
+#         servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326 # convert bytes to raw 10-bit and then angle, in deg
+#         print(servo_pos)
+#     except serial.serialutil.SerialException:
+#         print("Device lost :( Exiting...")
+#         break
+# ser.close()
 
 # send and listen
 # while True:
