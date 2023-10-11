@@ -32,9 +32,9 @@ while True:
 # only send
 while True:
     try:
-        command_deg = float(input(">> "))
-        command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little')
-        ser.write(command_raw)
+        command_deg = float(input(">> ")) # accept angle command as float degrees
+        command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little') # convert to positional command represented by 2 bytes
+        ser.write(command_raw) 
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break

@@ -4,6 +4,7 @@ import serial
 import os
 import serial.tools.list_ports
 from time import sleep
+import time
 
 
 # sniff for devices
@@ -30,15 +31,6 @@ while True:
         print("No devices detected. Retrying...")
         sleep(2)
         continue
-
-# # ser.write(b'x')
-
-# while True:
-#     try:
-#         print(ser.read())
-#     except serial.serialutil.SerialException:
-#         print("Device lost :( Exiting...")
-#         break
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -96,62 +88,6 @@ def gpg(t):
 
 #------------------------------------------------------------------------------------------------------------
 
-# max_curr = 0
-# max_prev = 0
-
-# iterate over time steps
-# for t in range_with_floats(0, t_max, dt):
-
-    # gait generation from parameters
-
-    # ax = plt.gca()
-    # ax.set_aspect('equal', adjustable='box')
-    # ax.clear()
-
-# points = [0] * 14
-# alpha_desired = [0] * 12
-
-# # get points on sine wave for 12 links
-# for i in range(1, 15):
-#     points_i = A*np.sin(t*omega + phi*(i-1))
-#     points[i-1] = round(points_i, 3)
-
-# # print(points)
-
-# # get gradients of links
-# m = [0] * 13
-# for l in range(0, len(points)-1):
-#     m[l] = round(points[l+1]-points[l], 3)
-
-# # print(m)
-
-# # get desired joint angles from link gradients using trig identity
-# for k in range(0, len(m)-1):
-#     alpha_desired[k] = round(np.rad2deg(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
-
-# print("Joint angles for t=0s (degrees): ", gpg(0))
-# print("Joint angles for t=0s (degrees): ", gpg(0.1))
-    # print("\n")
-
-    # check and update greatest joint angle
-    # max_curr = np.max(np.abs(alpha_desired))
-    # if max_curr > max_prev:
-    #     max_prev = max_curr
-
-    # plotting
-    # plt.plot(x_points, points, 'bo--')
-    # plt.ylim(-1, 1)
-    # plt.ylabel('amplitude')
-    # plt.xlabel('joint number (0 and 13 are not joints)')
-
-    # plt.show()
-
-# print("Max angle experienced is: ", max_curr, "degrees")
-
-# print("Controller output (Nm): ", U)
-
-#------------------------------------------------------------------------------------------------------------
-
 # Motor parameters
 J = 1  # Moment of inertia in kgm**2
 
@@ -159,8 +95,8 @@ J = 1  # Moment of inertia in kgm**2
 duration = 5  # Duration of the simulation (seconds)
 sampling_rate = 50  # Number of time steps per second
 time_steps = int(duration * sampling_rate)
-time = np.linspace(0, duration, time_steps)
-delta_t = time[1] - time[0]
+time_ = np.linspace(0, duration, time_steps)
+delta_t = time_[1] - time_[0]
 
 initial_pos = np.array(gpg(t[10])) # initial pose at one second
 desired_pos = np.array(gpg(t[15])) # pose at 1.5 sec (after 5*dt seconds)
@@ -177,9 +113,35 @@ servo_positions = np.array([servo_pos])
 servo_velocities = np.array([servo_vel])
 
 #------------------------------------------------------------------------------------------------------------
-
-
+prev_time_millis = int(round(time.time() * 1000))
 while (1):
+
+    current_time_millis = int(round(time.time() * 1000))
+
+    if ((current_time_millis - prev_time_millis) >= 1e6):
+        # send a command to switch position (+/- 50 deg), must have a flag to remember which position its currently in
+        # if osc_flag==1 etc etc
+        try:
+            command_deg = float(90) # accept angle command as float degrees
+            command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little') # convert to positional command represented by 2 bytes
+            ser.write(command_raw) 
+        except serial.serialutil.SerialException:
+            print("Device lost :( Exiting...")
+            ser.close()
+            break
+
+
+    # must listen to serial and unpack the servo position readings (2 bytes each)
+
+    try:
+        data = ser.read(2) # read 2 bytes
+        pos_packet = [b for b in data]
+        servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326 # convert bytes to raw 10-bit and then angle, in deg
+        # integrate servo_pos reading into control loop
+    except serial.serialutil.SerialException:
+        print("Device lost :( Exiting...")
+        break
+
     # err_norm = ((np.sum(abs(desired_pos-servo_pos)))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
     # err_norm = (((desired_pos-servo_pos))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
     err_norm = np.divide((desired_pos - servo_pos), abs(desired_pos - initial_pos))
@@ -199,7 +161,7 @@ while (1):
     servo_positions = np.vstack([servo_positions, servo_pos]) # this would actually be the position command
     servo_velocities = np.vstack([servo_velocities, servo_vel])
 
-    #------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 
 # Simulate 
 # for t in time[1:]:

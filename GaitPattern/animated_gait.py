@@ -48,3 +48,59 @@ ani = FuncAnimation(fig, animate, init_func=init, frames=100,
 
 FFwriter = FFMpegWriter(fps=10, extra_args=['-vcodec', 'libx264'])
 ani.save('snakey.mp4', writer=FFwriter)
+
+#------------------------------------------------------------------------------------------------------------
+
+# max_curr = 0
+# max_prev = 0
+
+# iterate over time steps
+# for t in range_with_floats(0, t_max, dt):
+
+    # gait generation from parameters
+
+    # ax = plt.gca()
+    # ax.set_aspect('equal', adjustable='box')
+    # ax.clear()
+
+# points = [0] * 14
+# alpha_desired = [0] * 12
+
+# # get points on sine wave for 12 links
+# for i in range(1, 15):
+#     points_i = A*np.sin(t*omega + phi*(i-1))
+#     points[i-1] = round(points_i, 3)
+
+# # print(points)
+
+# # get gradients of links
+# m = [0] * 13
+# for l in range(0, len(points)-1):
+#     m[l] = round(points[l+1]-points[l], 3)
+
+# # print(m)
+
+# # get desired joint angles from link gradients using trig identity
+# for k in range(0, len(m)-1):
+#     alpha_desired[k] = round(np.rad2deg(np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])), 3)
+
+# print("Joint angles for t=0s (degrees): ", gpg(0))
+# print("Joint angles for t=0s (degrees): ", gpg(0.1))
+    # print("\n")
+
+    # check and update greatest joint angle
+    # max_curr = np.max(np.abs(alpha_desired))
+    # if max_curr > max_prev:
+    #     max_prev = max_curr
+
+    # plotting
+    # plt.plot(x_points, points, 'bo--')
+    # plt.ylim(-1, 1)
+    # plt.ylabel('amplitude')
+    # plt.xlabel('joint number (0 and 13 are not joints)')
+
+    # plt.show()
+
+# print("Max angle experienced is: ", max_curr, "degrees")
+
+# print("Controller output (Nm): ", U)

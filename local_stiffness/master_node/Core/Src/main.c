@@ -313,17 +313,14 @@ int main(void)
 
 //  	serial_pos_command();
 
-//  	serial_send_pos();
-
   	if (usb_in[0] != 0 || usb_in[1] != 0)
   	{
   		command = ((usb_in[1] & 0xFF) << 8) | usb_in[0];
 			move_positional(SERVO_ID, command, 000, H_LED_WHITE);
-			HAL_Delay(50);
 			memset(usb_in, '\0', 64);
   	}
-
-		HAL_Delay(950);
+  	serial_send_pos();
+		HAL_Delay(100);
 
 
 	/* USER CODE END WHILE */
