@@ -99,7 +99,7 @@ void Error_Handler(void);
 //int dec_angle;
 
 // if there's a servo, zero it
-void init_zero_pos()
+void reset_and_zero_pos()
 {
 	if(get_status(SERVO_ID)) {
 		clear_error(SERVO_ID);
@@ -129,8 +129,8 @@ void oscillate_and_send(int angle, int period)
 	HAL_Delay(100); // let the serial monitor catch up
 	herkulex_init();
 
-	// start from 0 deg
-	init_zero_pos();
+	// check if error is raised and reset if so
+	reset_and_zero_pos();
 
 	int i = 0;
 
@@ -160,8 +160,8 @@ void oscillate_and_send(int angle, int period)
 void oscillate(int angle, int period)
 {
 
-	// start from 0 deg
-	init_zero_pos();
+	// check if error is raised and reset if so
+	reset_and_zero_pos();
 
 	int i = 0;
 
@@ -186,8 +186,8 @@ void oscillate(int angle, int period)
 void serial_pos_command()
 {
 
-	// start from 0 deg
-	init_zero_pos();
+	// check if error is raised and reset if so
+	reset_and_zero_pos();
 
 	while (1)
 	{
@@ -292,13 +292,19 @@ int main(void)
 //	usb_out[2] = '\r';
 //	usb_out[3] = '\n';
 
-	HAL_Delay(5000);
+	HAL_Delay(3000);
 
 	herkulex_init();
 
-	init_zero_pos();
+	// check if error is raised and reset if so
+	reset_and_zero_pos();
 
 	int command = 0;
+
+	// start from 0 deg
+//	move_angle(SERVO_ID, 0, 000, H_LED_GREEN);
+
+	HAL_Delay(50);
 
   /* USER CODE END 2 */
 
@@ -313,14 +319,20 @@ int main(void)
 
 //  	serial_pos_command();
 
+  	// check if error is raised and reset if so
+//  	reset_and_zero_pos();
+
   	if (usb_in[0] != 0 || usb_in[1] != 0)
   	{
-  		command = ((usb_in[1] & 0xFF) << 8) | usb_in[0];
-			move_positional(SERVO_ID, command, 000, H_LED_WHITE);
+  		command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
+			move_positional(SERVO_ID, command, 500, H_LED_WHITE);
 			memset(usb_in, '\0', 64);
   	}
+
+  	HAL_Delay(50);
+
   	serial_send_pos();
-		HAL_Delay(100);
+//		HAL_Delay(100);
 
 
 	/* USER CODE END WHILE */

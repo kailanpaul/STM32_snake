@@ -121,16 +121,16 @@ void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED) {
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
-// play time calc: uint8_t playtime = uint8_t(time_ms / 11.2f);
-void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
+// play time calc: uint16_t playtime = uint8_t(time_ms / 11.2f);
+void move_positional(uint8_t servo_ID, int position, uint16_t p_time_millis,
 		uint8_t i_LED) {
 	uint8_t data[5];
 
 	if (position > 1023 || position < 0)
 		return; // speed (goal) non correct
-	if ((p_time < 0) || (p_time > 2856))
+	if ((p_time_millis < 0) || (p_time_millis > 2856))
 		return;
-	data[0] = (uint8_t) ((float) p_time / 11.2); // 8. Execution time
+	data[0] = (uint8_t) ((float) p_time_millis / 11.2); // 8. Execution time
 
 	data[1] = position & 0X00FF;		// MSB Pos
 	data[2] = (position & 0XFF00) >> 8; // LSB Pos
@@ -158,12 +158,12 @@ void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
-// play time calc: uint8_t playtime = uint8_t(time_ms / 11.2f);
-void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED) {
+// play time calc: uint16_t playtime = uint8_t(time_ms / 11.2f);
+void move_angle(uint8_t servo_ID, float angle, uint16_t p_time_millis, uint8_t i_LED) {
 	if (angle > 160.0 || angle < -160.0)
 		return;
 	int position = (int) (angle / 0.325) + 512;
-	move_positional(servo_ID, position, p_time, i_LED);
+	move_positional(servo_ID, position, p_time_millis, i_LED);
 }
 
 // move all servo at the same time to a position: servo list building

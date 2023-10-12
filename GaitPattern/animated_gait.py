@@ -50,6 +50,12 @@ FFwriter = FFMpegWriter(fps=10, extra_args=['-vcodec', 'libx264'])
 ani.save('snakey.mp4', writer=FFwriter)
 
 #------------------------------------------------------------------------------------------------------------
+# simulation parameters
+# dt = 0.1
+# t_start = 0
+# t_max = 10
+# t = np.linspace(t_start, t_max, int(t_max/dt)+1)
+# x_points = np.linspace(0, 13, 14)
 
 # max_curr = 0
 # max_prev = 0
@@ -104,3 +110,65 @@ ani.save('snakey.mp4', writer=FFwriter)
 # print("Max angle experienced is: ", max_curr, "degrees")
 
 # print("Controller output (Nm): ", U)
+
+#------------------------------------------------------------------------------------------------------------
+
+# Motor parameters
+# J = 1  # Moment of inertia in kgm**2
+
+# Simulation parameters
+# duration = 5  # Duration of the simulation (seconds)
+# sampling_rate = 50  # Number of time steps per second
+# time_steps = int(duration * sampling_rate)
+# time_ = np.linspace(0, duration, time_steps)
+# delta_t = time_[1] - time_[0]
+
+# initial_pos = np.array(gpg(t[10])) # initial pose at one second
+# desired_pos = np.array(gpg(t[15])) # pose at 1.5 sec (after 5*dt seconds)
+# desired_vel = (desired_pos - initial_pos) / (dt*5) # rad/s
+
+# # Initialize variables
+# # Initial servo position (rad), initial servo velocity (rad/s) and acceleration
+# servo_pos = initial_pos # set initial servo position to the initial position
+# servo_vel = np.zeros(12)
+# alpha = np.zeros(12)
+
+# # Numpy arrays to store angular position and velocity values
+# servo_positions = np.array([servo_pos])
+# servo_velocities = np.array([servo_vel])
+
+# Simulate 
+# for t in time[1:]:
+#     # Calculate torque command: heavyside step at 3 seconds
+#     if t < 3:
+#         tau = np.zeros(12)
+#     else:
+#         # err_norm = ((np.sum(abs(desired_pos-servo_pos)))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+#         # err_norm = (((desired_pos-servo_pos))/(np.sum(abs(np.mean(servo_pos)-(servo_pos)))))
+#         err_norm = np.divide((desired_pos - servo_pos), abs(desired_pos - initial_pos))
+#         new_desired_vel = err_norm * desired_vel    # make the speed proportional to the normalised error 
+#                                                     # (max vel when err is max, 0 vel when err is 0)
+#         tau = force_controller(servo_pos, servo_vel, desired_pos, new_desired_vel)  
+
+#     # Calculate angular acceleration using the (simple) motor dynamics equation
+#     alpha = tau / J
+    
+#     # Update angular velocity and position using numerical integration
+#     servo_vel += alpha * delta_t
+#     servo_pos += servo_vel * delta_t
+    
+#     # Append values to the lists
+#     servo_positions = np.vstack([servo_positions, servo_pos]) # this would actually be the position command
+#     servo_velocities = np.vstack([servo_velocities, servo_vel])
+
+# print(initial_pos)
+# print(desired_pos)
+# print(np.round(servo_pos, 4))
+# print("Error: ", desired_pos-servo_pos)
+
+# plt.plot(time[:-3], servo_positions[3:])
+# plt.xlabel('Time (s)')
+# plt.ylabel('Angular Position (radians)')
+# plt.title('Angular Position vs. Time')
+# plt.grid(True)
+# plt.show()
