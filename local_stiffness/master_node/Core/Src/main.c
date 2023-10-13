@@ -296,9 +296,6 @@ int main(void)
 
 	herkulex_init();
 
-	// check if error is raised and reset if so
-	reset_and_zero_pos();
-
 	int command = 0;
 
 	// start from 0 deg
@@ -313,6 +310,9 @@ int main(void)
   while (1)
   {
 
+  	// check if error is raised and reset if so
+//  	reset_and_zero_pos();
+
 //  	echo();
 
 //  	oscillate(45, 50);
@@ -321,17 +321,18 @@ int main(void)
 
   	// check if error is raised and reset if so
 //  	reset_and_zero_pos();
+  	serial_send_pos();
 
   	if (usb_in[0] != 0 || usb_in[1] != 0)
   	{
   		command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
-			move_positional(SERVO_ID, command, 500, H_LED_WHITE);
+			move_positional(SERVO_ID, command, 100, H_LED_WHITE);
 			memset(usb_in, '\0', 64);
   	}
 
-  	HAL_Delay(50);
-
   	serial_send_pos();
+
+  	HAL_Delay(50);
 //		HAL_Delay(100);
 
 

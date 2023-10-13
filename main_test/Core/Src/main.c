@@ -20,7 +20,7 @@ uint8_t usb_in[1];
 uint8_t usb_out[18];
 uint16_t len = sizeof(usb_out) / sizeof(usb_out[0]);
 
-uint8_t IMU_address =  0b01101100; //left shifted by 1 - not sure why
+uint8_t encoder_address =  0b01101100; //left shifted by 1 - not sure why
 uint8_t I2C_buffer[1];
 
 uint16_t left;
@@ -100,57 +100,57 @@ int main(void) {
 
 
 
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0C, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, 0x0C, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
-//	if (HAL_I2C_Mem_Write(&hi2c3, IMU_address, 0x01, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c3, encoder_address, 0x01, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0D, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, 0x0D, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
-//	if (HAL_I2C_Mem_Write(&hi2c3, IMU_address, 0x02, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c3, encoder_address, 0x02, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
 
 	int i = 0;
 	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(1000);
 //
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0E, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, 0x0E, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 	//	left = I2C_buffer[0];
-	//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0F, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, 0x0F, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 	//		Error_Handler();
 	//	right = I2C_buffer[0];
 	//	offset = (left<<8)|right;
 	HAL_Delay(5);
 
 //	I2C_buffer[0] = 3;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	I2C_buffer[0] = 32;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	HAL_Delay(5);
 
 //----------------------------------------------------------------------------------------------------
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	left = I2C_buffer[0];
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	right = I2C_buffer[0];
 //	raw_angle = ((left<<8)|right);
 //	I2C_buffer[0] = left;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	I2C_buffer[0] = right;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	HAL_Delay(1);
 //----------------------------------------------------------------------------------------------------
 
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	left = I2C_buffer[0];
-//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	right = I2C_buffer[0];
 //	raw_angle = ((left<<8)|right);
@@ -162,19 +162,19 @@ int main(void) {
 //	left = raw_angle>>8;
 //	right = raw_angle;
 //	I2C_buffer[0] = left;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	I2C_buffer[0] = right;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //
 //	HAL_Delay(5);
 //
 //	I2C_buffer[0] = 3;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	I2C_buffer[0] = 32;
-//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //		Error_Handler();
 //	HAL_Delay(1);
 	usb_out[1] = '\r';
@@ -205,11 +205,11 @@ int main(void) {
 		}
 
 
-//		if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
 ////		x = I2C_buffer[0] << 8;
 //		left = I2C_buffer[0];
-//		if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 //			Error_Handler();
 ////		x |= I2C_buffer[0];
 //		right = I2C_buffer[0];
