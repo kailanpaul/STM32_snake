@@ -18,16 +18,18 @@ import time
 
 # constants
 
-# PD controller gains
-K_P = 50                                                        # Nm/rad
-K_D = 20                                                        # Nms/rad
+N_JOINTS = 1                                                                        # number of joints
+DATA_SIZE = 2                                                                        
+POSITION_DATA_SIZE = 2                                                              # number of bytes in servo position reading
+SEA_DATA_SIZE = 2                                                                   # number of bytes in SEA encoder reading                                                
+SERIAL_PACKET_SIZE = N_JOINTS*(SEA_DATA_SIZE+POSITION_DATA_SIZE)                    # total number of bytes in a serial packet
 
-POSITION_BYTES = 2                                              # number of bytes in servo position reading
-N = 1                                                           # number of joints
-J = 1                                                           # moment of inertia in kgm**2 (estimate based on 87 mm joint-joint lengths and servo-dominated segment mass)
+COMMAND_FREQ = 1                                                                    # frequency of commands (Hz)
+COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
-COMMAND_FREQ = 0.2                                              # frequency of commands (Hz)
-COMMAND_PERIOD = 1/COMMAND_FREQ                                 # time between commands in seconds
+K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
+K_D = 0.4*K                                                                         # admittance/impedance constant
+K_AI = (K-K_D)/(K*K_D)                                                              # admittance/impedance gain
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -108,16 +110,24 @@ def send_command(com, command):
         com.close()
         return  
 
-# convert angle in deg to raw position value and then to bytes
-def deg2bytes(pose):
+# convert servo position in degrees to raw position value and then to bytes
+def pos2bytes(pose):
     bytes_array = [0] * (len(pose) * 2)
     for i in range(0, len(pose)):
         bytes_array[(2*i):((2*i)+2)] = (int((pose[i] / 0.326) + 512)).to_bytes(2, 'little')
     return bytes_array
 
-# convert bytes to raw position value and then to angle in deg (3 DP)
-def bytes2deg(pos_bytes_packet):
-    return round((((pos_bytes_packet[1] & 0x03) << 8 | pos_bytes_packet[0]) - 513) * 0.326, 3)
+# convert servo position data from bytes to raw position value and then to angle in rad (3 DP)
+def bytes2pos(pos_data_packet):
+    return np.deg2rad(round((((pos_data_packet[1] & 0x03) << 8 | pos_data_packet[0]) - 513) * 0.326, 3))
+
+# convert SEA encoder data from bytes to angle (radians)
+def bytes2ang(sea_data_packet):
+    sea_raw = (sea_data_packet[1] << 8) | sea_data_packet[0]
+    calibrated_angle = (sea_raw * 2 * np.pi) / 4095
+    if (calibrated_angle > np.pi):
+        calibrated_angle -= 2*np.pi
+    return calibrated_angle
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -125,112 +135,51 @@ def main():
 
     # initialize variables
 
-    osc_flag = 0
-
-    # initial desired position and velocity
-    prev_desired_pos = np.zeros(N)
-    desired_pos = np.zeros(N)                                                                   # pose is 0 rad initially
-    desired_vel = (desired_pos - prev_desired_pos) / COMMAND_PERIOD                             # velocity is 0 rad/s initially
-
-    # initial control block position (rad), velocity (rad/s) and acceleration (rad/s/s)
-    C_p_pos = np.zeros(N)
-    C_p_vel = np.zeros(N)
-    C_p_acc = np.zeros(N)
+    sea_data = np.zeros(N_JOINTS)
+    desired_pos = np.zeros(N_JOINTS)                                
 
     # initial servo measurements
-    current_servo_pos = np.zeros(N)
-    prev_servo_pos = np.zeros(N)
-    servo_vel = np.zeros(N)
+    current_servo_pos = np.zeros(N_JOINTS)
 
-    ser = sniff()                                                                               # set port
+    ser = sniff()                                                  
 
     print("PlEAsE wAiT")
 
     # wait for servo to zero
+    ser.close()
     time.sleep(3) 
-    send_command(ser, deg2bytes(prev_desired_pos))
+    ser.open()
 
-    start_time = round(time.time(), 2)                                                          # time stamp in seconds to 2 DP
-    prev_read_time_sec = round(time.time(), 2)                                                
+    start_time = round(time.time(), 2)                                                                            
     prev_command_time_sec = round(time.time(), 2)   
 
     time.sleep(0.1)
 
-    #   init 
-    current_time_sec = round(time.time(), 2)                                            # update time
-    data = ser.read(POSITION_BYTES)                                                     # read 2 bytes
-    dt = current_time_sec - prev_read_time_sec                                          # calculate time step size for this iteration, for numerical integration
-    prev_read_time_sec = current_time_sec
-    pos_packet = [b for b in data]                                                      # put bites in array
-    for i in range(0, 2*N, POSITION_BYTES):                                             # iterate through array in 2-byte chunks 
-        current_servo_pos[i-1] = np.deg2rad(bytes2deg(pos_packet[i:i+POSITION_BYTES]))  # convert byte pairs to raw 10-bit position and then angle, in deg
-    print("servo_pos = ", np.rad2deg(current_servo_pos[0]), " deg")
-
-    servo_vel = (current_servo_pos - prev_servo_pos) / dt                               # compute servo velocity numerically
-    servo_vel[np.isnan(servo_vel)] = 0
-    prev_servo_pos = current_servo_pos                                                  # update servo pose
-
     while (1):
 
-        current_time_sec = round(time.time(), 2)                                                # update time
-
-        time.sleep(0.1)
-
-        # TO DO: READ FROM ENCODER
+        current_time_sec = round(time.time(), 2)                                                    
 
         try:
-            # reading position data from servo (~10 Hz)
-            data = ser.read(POSITION_BYTES)                                                     # read 2 bytes
-            dt = current_time_sec - prev_read_time_sec                                          # calculate time step size for this iteration, for numerical integration
-            prev_read_time_sec = current_time_sec
-            pos_packet = [b for b in data]                                                      # put bites in array
-            for i in range(0, 2*N, POSITION_BYTES):                                             # iterate through array in 2-byte chunks 
-                current_servo_pos[i-1] = np.deg2rad(bytes2deg(pos_packet[i:i+POSITION_BYTES]))  # convert byte pairs to raw 10-bit position and then angle, in deg
-            print("servo_pos = ", np.rad2deg(current_servo_pos[0]), " deg")
 
-            servo_vel = (current_servo_pos - prev_servo_pos) / dt                               # compute servo velocity numerically
-            servo_vel[np.isnan(servo_vel)] = 0
-            prev_servo_pos = current_servo_pos                                                  # update servo pose
+            # FEEDBACK
 
-            # compute control signal:
-
-            # check if command period has passed since last command
-            if ((current_time_sec - prev_command_time_sec) >= COMMAND_PERIOD):                                          
-                # desired_pos = np.round(gpg((current_time_sec - start_time), N), 1)              # calculate desired pose command using GPG for current time (in seconds)
-                if (osc_flag == 0):
-                    desired_pos = np.array([np.deg2rad(50)])
-                    osc_flag = 1
+            data = ser.read(SERIAL_PACKET_SIZE)                                                     # read 2 bytes
+            serial_packet = [b for b in data]                                                       # put bites in array
+            for i in range(0, (2*N_JOINTS)+1, DATA_SIZE):                                           # iterate through array in 2-byte chunks
+                if ((serial_packet[i+1] & 0x80) == 0x80):                                           # mask with 0b1000000 - treat as pos data if result is 1, else SEA data
+                    idx = int(i/4)
+                    current_servo_pos[idx] = bytes2pos(serial_packet[i:i+DATA_SIZE])                # convert byte pairs to raw 10-bit position and then angle
                 else:
-                    desired_pos = np.array([np.deg2rad(-50)])
-                    osc_flag = 0
-                print("desired_pos = ", np.rad2deg(desired_pos), " deg")
-                desired_vel = (desired_pos - prev_desired_pos) / COMMAND_PERIOD                 # update desired velocity with current and previous pose commands (rad/s)
-                prev_command_time_sec = current_time_sec                                        # update time of last command
-                prev_desired_pos = desired_pos                                                  # update previous pose
+                    idx = int((i-2)/4)
+                    sea_data[idx] = bytes2ang(serial_packet[i:i+DATA_SIZE])
 
-                with np.errstate(divide='ignore'):
-                    # err_norm = ((np.sum(abs(desired_pos-current_servo_pos)))/(np.sum(abs(np.mean(current_servo_pos)-(current_servo_pos)))))
-                    # err_norm = (((desired_pos-current_servo_pos))/(np.sum(abs(np.mean(current_servo_pos)-(current_servo_pos)))))
-                    err_norm = np.divide(abs(desired_pos - current_servo_pos), abs(desired_pos - prev_desired_pos))   # i think this expression is correct ..
-                err_norm[np.isnan(err_norm)] = 0
-                err_norm[np.isinf(err_norm)] = 0
+            # CONTROL
 
-                scaled_desired_vel = err_norm * desired_vel                                         # make the speed proportional to the (normalised?) error 
-                tau_U = force_controller(current_servo_pos, servo_vel, desired_pos, scaled_desired_vel)     # compute control input U [Nm]
+            if ((current_time_sec - prev_command_time_sec) >= COMMAND_PERIOD):                      # check if command period has passed since last command                                       
+                desired_pos = np.round(gpg((current_time_sec - start_time), N_JOINTS), 1)           # calculate desired pose command using GPG for current time (in seconds)
 
-                print("U = ", tau_U[0], " Nm")
-                # convert U to position command for servo
-                # calculate angular acceleration using the (simple) motor dynamics equation
-                C_p_acc = tau_U / J
-                C_p_acc[np.isnan(C_p_acc)] = 0
-
-                # calculate C_p output angular velocity and position using numerical integrations (beware of drift)
-                C_p_vel += C_p_acc * dt
-                C_p_pos += np.round((C_p_vel * dt), 3)
-
-                print("PD control position =", np.rad2deg(C_p_pos[0]), " deg")
-                command_raw = deg2bytes(np.rad2deg(C_p_pos))                                        # convert to positional command represented by 2 bytes
-                send_command(ser, deg2bytes(np.rad2deg(desired_pos)))                               # send command to STM32 over serial
+            desired_pos_prime = desired_pos - sea_data[0]*K*K_AI                                    # addition for admittance, subtraction for impedance
+            send_command(ser, pos2bytes(np.rad2deg(desired_pos_prime)))                             # send command to STM32 over serial
 
         except serial.serialutil.SerialException:
             print("Device lost :( Exiting...")

@@ -51,7 +51,7 @@ int dec_angle;
 #define ANGLE_L 0x0E
 #define ANGLE_R 0x0F
 
-#define SERVO_ID 4
+#define SERVO_ID 253
 
 int main(void) {
 	HAL_Init();
@@ -95,7 +95,7 @@ int main(void) {
 	//
 	//	uint16_t count = 0;
 	HAL_Delay(5000);
-	herkulex_init();
+//	herkulex_init();
 
 
 
@@ -110,7 +110,7 @@ int main(void) {
 //			Error_Handler();
 
 	int i = 0;
-	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+//	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(1000);
 //
 //	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, 0x0E, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -131,20 +131,20 @@ int main(void) {
 //	HAL_Delay(5);
 
 //----------------------------------------------------------------------------------------------------
-//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//		Error_Handler();
-//	left = I2C_buffer[0];
-//	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//		Error_Handler();
-//	right = I2C_buffer[0];
-//	raw_angle = ((left<<8)|right);
-//	I2C_buffer[0] = left;
-//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//		Error_Handler();
-//	I2C_buffer[0] = right;
-//	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//		Error_Handler();
-//	HAL_Delay(1);
+	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	left = I2C_buffer[0];
+	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	right = I2C_buffer[0];
+	raw_angle = ((left<<8)|right);
+	I2C_buffer[0] = left;
+	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	I2C_buffer[0] = right;
+	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	HAL_Delay(1);
 //----------------------------------------------------------------------------------------------------
 
 //	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -181,48 +181,48 @@ int main(void) {
 	usb_out[2] = '\n';
 
 	while (1) {
+//
+//		if(get_status(SERVO_ID)) {
+//			clear_error(SERVO_ID);
+//			torque_on(SERVO_ID);
+//			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+//			HAL_Delay(1000);
+//		}
+//
+//		if (i==80)
+//		{
+//			usb_out[0] = '<';
+//			CDC_Transmit_FS(usb_out, 3);
+//			HAL_Delay(50);
+//			move_angle(SERVO_ID, -40, 000, H_LED_BLUE);
+//		}
+//		if (i==160) {
+//			usb_out[0] = '>';
+//			CDC_Transmit_FS(usb_out, 3);
+//			HAL_Delay(50);
+//			move_angle(SERVO_ID, 40, 000, H_LED_BLUE);
+//			i = 0;
+//		}
 
-		if(get_status(SERVO_ID)) {
-			clear_error(SERVO_ID);
-			torque_on(SERVO_ID);
-			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-			HAL_Delay(1000);
-		}
 
-		if (i==80)
-		{
-			usb_out[0] = '<';
-			CDC_Transmit_FS(usb_out, 3);
-			HAL_Delay(50);
-			move_angle(SERVO_ID, -40, 000, H_LED_BLUE);
-		}
-		if (i==160) {
-			usb_out[0] = '>';
-			CDC_Transmit_FS(usb_out, 3);
-			HAL_Delay(50);
-			move_angle(SERVO_ID, 40, 000, H_LED_BLUE);
-			i = 0;
-		}
-
-
-//		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//			Error_Handler();
-////		x = I2C_buffer[0] << 8;
-//		left = I2C_buffer[0];
-//		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-//			Error_Handler();
-////		x |= I2C_buffer[0];
-//		right = I2C_buffer[0];
-//		raw = ((left<<8)|right);
-//		raw_angle = (raw * 7000 / 4095)-3500;
-//		deg_angle = raw_angle/100;
-//		dec_angle = raw_angle%100;
+		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+			Error_Handler();
+//		x = I2C_buffer[0] << 8;
+		left = I2C_buffer[0];
+		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+			Error_Handler();
+//		x |= I2C_buffer[0];
+		right = I2C_buffer[0];
+		raw = ((left<<8)|right);
+		raw_angle = (raw * 7000 / 4095)-3500;
+		deg_angle = raw_angle/100;
+		dec_angle = raw_angle%100;
 		//-offset;
 //		usb_out[0] = '!';
 //		CDC_Transmit_FS(usb_out, 2);
 		HAL_Delay(50);
 
-		i++;
+//		i++;
 
 	}
 

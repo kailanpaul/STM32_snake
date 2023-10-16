@@ -30,27 +30,36 @@ while True:
         continue
 
 # only send
-while True:
-    try:
-        command_deg = float(input(">> ")) # accept angle command as float degrees
-        command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little') # convert to positional command represented by 2 bytes
-        ser.write(command_raw) 
-    except serial.serialutil.SerialException:
-        print("Device lost :( Exiting...")
-        break
-ser.close()
-
-# only listen
 # while True:
 #     try:
-#         data = ser.read(2) # read 2 bytes
-#         pos_packet = [b for b in data]
-#         servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326 # convert bytes to raw 10-bit and then angle, in deg
-#         print(servo_pos)
+#         command_deg = float(input(">> ")) # accept angle command as float degrees
+#         command_raw = (int(command_deg / 0.326 + 513)).to_bytes(2, 'little') # convert to positional command represented by 2 bytes
+#         ser.write(command_raw) 
 #     except serial.serialutil.SerialException:
 #         print("Device lost :( Exiting...")
 #         break
 # ser.close()
+
+# data = ser.read(2) # read 2 bytes
+# packet = [b for b in data]
+# # servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326
+# offset = (packet[1] << 8) | packet [0]
+
+# only listen
+while True:
+    try:
+        data = ser.read(2) # read 2 bytes
+        packet = [b for b in data]
+        # servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326
+        encoder_raw = (packet[0] << 8) | packet[1]
+        calibrated_angle = ((encoder_raw) * 360) / 4095
+        if (calibrated_angle > 180.0):
+            calibrated_angle -= 360
+        print(calibrated_angle)
+    except serial.serialutil.SerialException:
+        print("Device lost :( Exiting...")
+        break
+ser.close()
 
 # send and listen
 # while True:
