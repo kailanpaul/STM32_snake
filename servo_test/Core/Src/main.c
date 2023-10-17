@@ -37,6 +37,7 @@ int main(void) {
  	HAL_Init();
 
 	SystemClock_Config();
+	SystemCoreClockUpdate();
 
 	MX_GPIO_Init();
 	MX_CAN1_Init();
@@ -116,7 +117,6 @@ int main(void) {
 //		}
 //		move_continuous(4, 500, H_LED_BLUE);
 //		HAL_Delay(1000);
-
 
 		if(get_status(SERVO_ID)) {
 			clear_error(SERVO_ID);
@@ -291,10 +291,6 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct_RED.Speed = GPIO_SPEED_HIGH;
 	HAL_GPIO_Init(RED_GPIO_PORT, &GPIO_InitStruct_RED);
 }
-
-//void SysTick_Handler(void) {
-//  HAL_IncTick();
-//}
 
 void Error_Handler(void) {
 	__disable_irq();

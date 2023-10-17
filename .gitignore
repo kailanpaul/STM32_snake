@@ -10,3 +10,9 @@
 *.launch
 */Debug/
 */.vscode/
+cube_workspace.code-workspace
+**/project.checksum
+**/idedata.json
+**/*.a
+**/*.bin
+**/*.dblite
