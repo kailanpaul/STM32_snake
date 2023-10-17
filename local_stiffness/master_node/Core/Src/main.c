@@ -38,9 +38,10 @@
 
 #define SERVO_ID 253
 
-#define N_JOINTS 1
+#define N_JOINTS 2
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
+#define SERIAL_ENCODE_MASK 0b10000000
 
 /* USER CODE END PD */
 
@@ -61,18 +62,21 @@ UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
 
-CAN_RxHeaderTypeDef rxHeader; //CAN Bus Receive Header
-CAN_TxHeaderTypeDef txHeader; //CAN Bus Transmit Header
-uint8_t CAN_RX_buffer[8];  //CAN Bus Receive Buffer
-CAN_FilterTypeDef canfil; //CAN Bus Filter
-uint32_t canMailbox; //CAN Bus Mail box variable
+CAN_RxHeaderTypeDef rxHeader; // CAN Bus Receive Header
+CAN_TxHeaderTypeDef txHeader; // CAN Bus Transmit Header
+uint8_t CAN_RX_buffer[(N_JOINTS-1) * (POSITION_DATA_SIZE + SEA_DATA_SIZE)]; // CAN Bus Receive Buffer
+CAN_FilterTypeDef canfil; // CAN Bus Filter
+uint32_t canMailbox; // CAN Bus Mail box variable
 
-uint8_t encoder_address = 0b01101100; 	// left-shifted by 1 - not sure why
+uint8_t encoder_address = 0b01101100; 	// left-shifted by 1 - not sure why :)
 uint8_t I2C_buffer[1];
-uint8_t usb_in[POSITION_DATA_SIZE];
+uint8_t usb_in[N_JOINTS * POSITION_DATA_SIZE];
 uint8_t usb_out[N_JOINTS * (POSITION_DATA_SIZE + SEA_DATA_SIZE)];
 uint16_t packet_len = sizeof(usb_out) / sizeof(usb_out[0]);
 uint8_t position_data_array[2];
+
+uint8_t state_buffer[(N_JOINTS-1)*(SEA_DATA_SIZE + POSITION_DATA_SIZE)];
+uint8_t my_state_buffer[(SEA_DATA_SIZE + POSITION_DATA_SIZE)];
 
 /* USER CODE END PV */
 
@@ -89,9 +93,6 @@ static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
 extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
-void echo(void);
-void oscillate(int angle, int period);
-void serial_pos_command();
 void Error_Handler(void);
 
 /* USER CODE END PFP */
@@ -105,6 +106,9 @@ int raw;
 int raw_angle;
 int deg_angle;
 int dec_angle;
+uint8_t csend[8]; // CAN Tx Buffer
+//uint8_t request_packet[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t request_packet[] = {0xFF};
 
 // reset and zero servo if error flag is raised
 void reset_and_zero_pos()
@@ -118,98 +122,98 @@ void reset_and_zero_pos()
 }
 
 // echo first character of string received over USB
-void echo(void)
-{
-	if(usb_in[0] != '\0')
-	{
-		usb_out[0] = usb_in[0];
-		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-		HAL_Delay(10);
-		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-		CDC_Transmit_FS(usb_out, 1);
-		memset(usb_in, '\0', 64); // clear buffer
-	}
-}
+//void echo(void)
+//{
+//	if(usb_in[0] != '\0')
+//	{
+//		usb_out[0] = usb_in[0];
+//		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+//		HAL_Delay(10);
+//		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+//		CDC_Transmit_FS(usb_out, 1);
+//		memset(usb_in, '\0', 64); // clear buffer
+//	}
+//}
 
 // oscillate between +/- angle deg and send a '<' or '>' over serial
-void oscillate_and_send(int angle, int period)
-{
-	// check if error is raised and reset if so
-	reset_and_zero_pos();
-	int i = 0;
-	while (1) {
-		if (i==period)
-		{
-			usb_out[0] = '<';
-			CDC_Transmit_FS(usb_out, 1);
-			HAL_Delay(50);
-			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
-		}
-		if (i==period*2) {
-			usb_out[0] = '>';
-			CDC_Transmit_FS(usb_out, 1);
-			HAL_Delay(50);
-			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
-			i = 0;
-		}
-		HAL_Delay(50);
-		i++;
-	}
-}
+//void oscillate_and_send(int angle, int period)
+//{
+//	// check if error is raised and reset if so
+//	reset_and_zero_pos();
+//	int i = 0;
+//	while (1) {
+//		if (i==period)
+//		{
+//			usb_out[0] = '<';
+//			CDC_Transmit_FS(usb_out, 1);
+//			HAL_Delay(50);
+//			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
+//		}
+//		if (i==period*2) {
+//			usb_out[0] = '>';
+//			CDC_Transmit_FS(usb_out, 1);
+//			HAL_Delay(50);
+//			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
+//			i = 0;
+//		}
+//		HAL_Delay(50);
+//		i++;
+//	}
+//}
 
 // oscillate between +/- angle
-void oscillate(int angle, int period)
-{
-	// check if error is raised and reset if so
-	reset_and_zero_pos();
-	int i = 0;
-	while (1) {
-		if (i==period)
-		{
-			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
-		}
-		if (i==period*2) {
-			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
-			i = 0;
-		}
-		HAL_Delay(50);
-		i++;
-	}
-}
+//void oscillate(int angle, int period)
+//{
+//	// check if error is raised and reset if so
+//	reset_and_zero_pos();
+//	int i = 0;
+//	while (1) {
+//		if (i==period)
+//		{
+//			move_angle(SERVO_ID, -angle, 000, H_LED_WHITE);
+//		}
+//		if (i==period*2) {
+//			move_angle(SERVO_ID, angle, 000, H_LED_BLUE);
+//			i = 0;
+//		}
+//		HAL_Delay(50);
+//		i++;
+//	}
+//}
 
 // rotate servo left and right for '<' and '>' received over serial
-void serial_pos_command()
-{
-	// check if error is raised and reset if so
-	reset_and_zero_pos();
-	while (1)
-	{
-		// rotate -45 deg if < is received from PC
-		if (usb_in[0] == '<')
-		{
-			move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
-			memset(usb_in, '\0', 64);
-		}
-		// rotate 45 deg if > is received from PC
-		if (usb_in[0] == '>')
-		{
-			move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
-			memset(usb_in, '\0', 64);
-		}
-		HAL_Delay(50);
-	}
-}
+//void serial_pos_command()
+//{
+//	// check if error is raised and reset if so
+//	reset_and_zero_pos();
+//	while (1)
+//	{
+//		// rotate -45 deg if < is received from PC
+//		if (usb_in[0] == '<')
+//		{
+//			move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
+//			memset(usb_in, '\0', 64);
+//		}
+//		// rotate 45 deg if > is received from PC
+//		if (usb_in[0] == '>')
+//		{
+//			move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
+//			memset(usb_in, '\0', 64);
+//		}
+//		HAL_Delay(50);
+//	}
+//}
 
 // get the servo position (raw, bytes) and send over serial
 // must be converted to raw 10-bit or angle on the receiving end
-void serial_send_pos()
-{
-	uint8_t position_data_array[2]; // position data is contained in 2 bytes
-	get_position_bytes(SERVO_ID, position_data_array);
-	usb_out[0] = position_data_array[0];
-	usb_out[1] = position_data_array[1];
-	CDC_Transmit_FS(usb_out, 2);
-}
+//void serial_send_pos()
+//{
+//	uint8_t position_data_array[2]; // position data is contained in 2 bytes
+//	get_position_bytes(SERVO_ID, position_data_array);
+//	usb_out[0] = position_data_array[0];
+//	usb_out[1] = position_data_array[1];
+//	CDC_Transmit_FS(usb_out, 2);
+//}
 
 /* USER CODE END 0 */
 
@@ -271,7 +275,7 @@ int main(void)
 	txHeader.ExtId = 0x02;
 	txHeader.TransmitGlobalTime = DISABLE;
 
-	if (HAL_CAN_ConfigFilter(&hcan1,&canfil) != HAL_OK) // initialize CAN filter
+	if (HAL_CAN_ConfigFilter(&hcan1, &canfil) != HAL_OK) // initialize CAN filter
 	{
 		Error_Handler();
 	}
@@ -279,7 +283,7 @@ int main(void)
 	{
 		Error_Handler();
 	}
-	if (HAL_CAN_ActivateNotification(&hcan1,CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) // initialize CAN bus RX interrupt
+	if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) // initialize CAN bus RX interrupt
 	{
 		Error_Handler();
 	}
@@ -289,7 +293,9 @@ int main(void)
 	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(2000);
 
-	int command = 0;
+	int my_command = 0;
+	int i = 0;
+	int hex_id = 0x01;
 
 	// get encoder initial reading and use to calibrate
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -317,10 +323,30 @@ int main(void)
   	// check if error is raised and reset if so
 //  	reset_and_zero_pos();
 
+  	// send request to other segments over CAN for their data
+  	if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
+  	{
+  		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // send message
+  		{
+  			Error_Handler();
+  		}
+  	}
+
+		// receive state data delay
+		HAL_Delay(50);
+
+		for (i = 0; i < (sizeof CAN_RX_buffer / sizeof CAN_RX_buffer[0]); i++)
+		{
+			state_buffer[i] = CAN_RX_buffer[i];
+		}
+
+  	// add own data
   	// get position data (2 bytes each) and add to packet
   	get_position_bytes(SERVO_ID, position_data_array);
-  	usb_out[0] = position_data_array[0];
-  	usb_out[1] = (position_data_array[1] | 0b10000000);
+  	my_state_buffer[0] = position_data_array[0];
+  	my_state_buffer[1] = (position_data_array[1] | SERIAL_ENCODE_MASK); // encode servo data MSB to create contrast to encoder data
+
+  	HAL_Delay(50);
 
   	// get encoder reading (2 bytes each) and add to packet
 		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -329,19 +355,42 @@ int main(void)
 		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 			Error_Handler();
 		right = I2C_buffer[0];
-		usb_out[2] = right;
-		usb_out[3] = left;
+		my_state_buffer[2] = right;
+		my_state_buffer[3] = left;
 
-		// send packet
+		// concatenate the two buffers, from j=0 (tail) to j=N-1 (head)
+		memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
+		memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
+
+		// send state data to PC
 		CDC_Transmit_FS(usb_out, packet_len);
+
+//		memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
+//		memset(state_buffer, 0x0, sizeof(state_buffer));
 
 		HAL_Delay(50);
 
 		// check if command is received and if so, execute it
-  	if (usb_in[0] != 0 || usb_in[1] != 0) // could have a better condition
+  	if (usb_in[0] != 0 && usb_in[1] != 0) // i.e. if usb_in not empty
   	{
-  		command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
-			move_positional(SERVO_ID, command, 100, H_LED_WHITE);
+  		// grab own command
+  		my_command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
+
+  		// send rest over CAN
+  		for (i = 2; i < N_JOINTS*POSITION_DATA_SIZE+1; i = i + 2)
+  		{
+  			uint8_t csend[] = {hex_id, usb_in[i], usb_in[i+1]};
+  	  	if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
+  	  	{
+  	  		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+  	  		{
+  	  			Error_Handler();
+  	  		}
+  	  	}
+  			hex_id++;
+  		}
+  		hex_id = 0x01;
+			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 			memset(usb_in, '\0', 64);
   	}
 
@@ -409,7 +458,7 @@ static void MX_CAN1_Init(void) {
 	hcan1.Init.Prescaler = 9;
 	hcan1.Init.Mode = CAN_MODE_NORMAL;
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; //10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
+	hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; // 10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
 	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
 	hcan1.Init.TimeTriggeredMode = DISABLE;
 	hcan1.Init.AutoBusOff = DISABLE;
@@ -614,33 +663,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
-	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) //Receive CAN bus message to canRX buffer
+	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
 	{
 		Error_Handler();
 	}
-
-//	CDC_Transmit_FS("ID: ", 4);
-//	while (CDC_Transmit_FS("ID: ", 4) != USBD_OK);
-//	while (CDC_Transmit_FS(rxHeader.StdId, 1) != USBD_OK);
-//	while (CDC_Transmit_FS("| ", 2) != USBD_OK);
-//	while (CDC_Transmit_FS(canRX, sizeof(canRX)/sizeof(canRX[0])) != USBD_OK);
-//	char buf[8];
-	if (rxHeader.StdId > 9)
-	{
-		rxHeader.StdId += 55;
-	} else {
-		rxHeader.StdId += 48;
-	}
-//	sprintf(buf, "ID: %lu\r\n", rxHeader.StdId);
-//	char val[] = " ";
-//	val[0] = (char) rxHeader.StdId;
-//	strcat(buf, val);
-//	CDC_Transmit_FS((uint8_t*)buf, 8);
-//	rxHeader.StdId += 48;
-	CDC_Transmit_FS((uint8_t*)&rxHeader.StdId, 1);
-//	CDC_Transmit_FS("1", 1);
 }
 /* USER CODE END 4 */
 

@@ -17,7 +17,7 @@ while True:
                     ser = serial.Serial(str(com_list[0]), write_timeout=0, parity=serial.PARITY_NONE)
                     break
                 except serial.serialutil.SerialException:
-                    print("ACCESS DENIED WAH WAH WAH (remember to close other shells)")
+                    print("ACCESS DENIED WAH WAH WAH")
                     exit()
         else:
             try:
@@ -48,17 +48,23 @@ while True:
 # only listen
 while True:
     try:
-        data = ser.read(2) # read 2 bytes
+        data = ser.read(8) 
         packet = [b for b in data]
-        # servo_pos = (((pos_packet[1] & 0x03) << 8 | pos_packet[0]) - 513) * 0.326
-        encoder_raw = (packet[0] << 8) | packet[1]
-        calibrated_angle = ((encoder_raw) * 360) / 4095
-        if (calibrated_angle > 180.0):
-            calibrated_angle -= 360
-        print(calibrated_angle)
+        print(packet)
+        for i in range(0, 8, 2):                                         
+            if ((packet[i+1] & 0x80) == 0x80):              
+                servo_pos = (((packet[1] & 0x03) << 8 | packet[0]) - 513) * 0.326
+                print(servo_pos, "deg servo")
+            else:
+                encoder_raw = (packet[i+1] << 8) | packet[i]
+                calibrated_angle = ((encoder_raw) * 360) / 4095
+                if (calibrated_angle > 180.0):
+                    calibrated_angle -= 360
+                print(calibrated_angle, "encoder")
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break
+
 ser.close()
 
 # send and listen
