@@ -236,10 +236,12 @@ int main(void)
 		{
 			if (CAN_RX_buffer[0] == txHeader.StdId)
 			{
+				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 				// grab command and execute
 				my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
 				move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 				HAL_Delay(50);
+				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
 			}
 			else if (CAN_RX_buffer[0] == request_packet[0])
 			{
@@ -260,11 +262,14 @@ int main(void)
 				csend[2] = right;
 				csend[3] = left;
 
+				HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
 				// send over CAN
 				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 				{
 					Error_Handler();
 				}
+				HAL_Delay(10);
+				HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 			}
 		}
 

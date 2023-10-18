@@ -18,12 +18,12 @@ import time
 
 # constants
 
-N_JOINTS = 1                                                                        # number of joints
+N_JOINTS = 2                                                                        # number of joints
 DATA_SIZE = 2                                                                       # all data (SEA and servo) is 2 bytes in size                                            
 SERIAL_PACKET_SIZE = 2 * N_JOINTS * DATA_SIZE                                       # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 1                                                                    # frequency of commands (Hz)
+COMMAND_FREQ = 0.1                                                                  # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
 A = np.pi/3                                                                         # sine amplitude
@@ -153,6 +153,7 @@ def main():
 
             data = ser.read(SERIAL_PACKET_SIZE)                                                     # read 2 bytes
             serial_packet = [b for b in data]                                                       # put bites in array
+            print(serial_packet)
             for i in range(0, (2*N_JOINTS)+1, DATA_SIZE):                                           # iterate through array in 2-byte chunks
                 if ((serial_packet[i+1] & SERIAL_DECODE_MASK) == SERIAL_DECODE_MASK):               # mask MSB with 0b1000000 - treat as pos data if result is 1, else SEA data
                     idx = int(i/4)

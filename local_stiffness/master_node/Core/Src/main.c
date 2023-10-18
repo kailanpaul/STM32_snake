@@ -375,6 +375,7 @@ int main(void)
 		// check if command is received and if so, execute it
   	if (usb_in[0] != 0 && usb_in[1] != 0) // i.e. if usb_in not empty
   	{
+  		HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
   		// grab own command
   		my_command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
 
@@ -391,9 +392,9 @@ int main(void)
   		hex_id = 0x01;
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 			memset(usb_in, '\0', 64);
+			HAL_Delay(50);
+			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
-
-  	HAL_Delay(50);
 
 	/* USER CODE END WHILE */
 
