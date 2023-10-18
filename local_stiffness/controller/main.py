@@ -160,21 +160,6 @@ def main():
                 else:
                     idx = int((i-2)/4)
                     sea_data[idx] = bytes2ang(serial_packet[i:i+DATA_SIZE])                         # convert byte type to raw 12-bit position and then deflection angle
-            print(servo_pos)
-
-            # data = ser.read(8) 
-            # packet = [b for b in data]
-            # print(packet)
-            # for i in range(0, 8, 2):                                         
-            #     if ((packet[i+1] & 0x80) == 0x80):              
-            #         servo_pos = (((packet[1] & 0x03) << 8 | packet[0]) - 513) * 0.326
-            #         print(servo_pos, "deg servo")
-            #     else:
-            #         encoder_raw = (packet[i+1] << 8) | packet[i]
-            #         calibrated_angle = ((encoder_raw) * 360) / 4095
-            #         if (calibrated_angle > 180.0):
-            #             calibrated_angle -= 360
-            #         print(calibrated_angle, "encoder")
 
             # ..CONTROL
 

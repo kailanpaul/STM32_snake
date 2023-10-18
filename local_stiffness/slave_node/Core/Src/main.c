@@ -18,7 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "stm32f4xx_hal.h"
+#include "Herkulex.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -260,18 +261,16 @@ int main(void)
 				csend[3] = left;
 
 				// send over CAN
-		  	if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
-		  	{
-		  		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
-		  		{
-		  			Error_Handler();
-		  		}
-		  	}
+				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+				{
+					Error_Handler();
+				}
 			}
 		}
 
 		HAL_Delay(50);
-
+//		HAL_GPIO_TogglePin(YELLOW_GPIO_PORT, YELLOW_LED);
+//		HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -343,12 +342,12 @@ static void MX_CAN1_Init(void)
   hcan1.Init.Prescaler = 9;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_5TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_2TQ; // 10 and 5 gives 250k, 5 and 2 gives 500k, 2 and 1 gives 1M
+  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.AutoRetransmission = ENABLE;
   hcan1.Init.ReceiveFifoLocked = DISABLE;
   hcan1.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)

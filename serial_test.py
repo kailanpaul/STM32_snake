@@ -46,34 +46,33 @@ while True:
 # offset = (packet[1] << 8) | packet [0]
 
 # only listen
-while True:
-    try:
-        data = ser.read(8) 
-        packet = [b for b in data]
-        print(packet)
-        for i in range(0, 8, 2):                                         
-            if ((packet[i+1] & 0x80) == 0x80):              
-                servo_pos = (((packet[1] & 0x03) << 8 | packet[0]) - 513) * 0.326
-                print(servo_pos, "deg servo")
-            else:
-                encoder_raw = (packet[i+1] << 8) | packet[i]
-                calibrated_angle = ((encoder_raw) * 360) / 4095
-                if (calibrated_angle > 180.0):
-                    calibrated_angle -= 360
-                print(calibrated_angle, "encoder")
-    except serial.serialutil.SerialException:
-        print("Device lost :( Exiting...")
-        break
-
-ser.close()
-
-# send and listen
 # while True:
-#     ser.write(str(input(">> ")).encode())
 #     try:
-#         var = ser.read()
-#         print(var.decode())
+#         data = ser.read(8) 
+#         packet = [b for b in data]
+#         print(packet)
+#         for i in range(0, 8, 2):                                         
+#             if ((packet[i+1] & 0x80) == 0x80):              
+#                 servo_pos = (((packet[1] & 0x03) << 8 | packet[0]) - 513) * 0.326
+#                 print(servo_pos, "deg servo")
+#             else:
+#                 encoder_raw = (packet[i+1] << 8) | packet[i]
+#                 calibrated_angle = ((encoder_raw) * 360) / 4095
+#                 if (calibrated_angle > 180.0):
+#                     calibrated_angle -= 360
+#                 print(calibrated_angle, "encoder")
 #     except serial.serialutil.SerialException:
 #         print("Device lost :( Exiting...")
 #         break
 # ser.close()
+
+# send and listen
+while True:
+    ser.write(str(input(">> ")).encode())
+    try:
+        var = ser.read()
+        print(var.decode())
+    except serial.serialutil.SerialException:
+        print("Device lost :( Exiting...")
+        break
+ser.close()

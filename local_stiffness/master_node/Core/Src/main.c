@@ -64,7 +64,8 @@ UART_HandleTypeDef huart4;
 
 CAN_RxHeaderTypeDef rxHeader; // CAN Bus Receive Header
 CAN_TxHeaderTypeDef txHeader; // CAN Bus Transmit Header
-uint8_t CAN_RX_buffer[(N_JOINTS-1) * (POSITION_DATA_SIZE + SEA_DATA_SIZE)]; // CAN Bus Receive Buffer
+//uint8_t CAN_RX_buffer[(N_JOINTS-1) * (POSITION_DATA_SIZE + SEA_DATA_SIZE)]; // CAN Bus Receive Buffer
+uint8_t CAN_RX_buffer[8];
 CAN_FilterTypeDef canfil; // CAN Bus Filter
 uint32_t canMailbox; // CAN Bus Mail box variable
 
@@ -324,13 +325,14 @@ int main(void)
 //  	reset_and_zero_pos();
 
   	// send request to other segments over CAN for their data
-  	if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
-  	{
-  		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // send message
-  		{
-  			Error_Handler();
-  		}
-  	}
+		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+		uint8_t request_packet[] = {0xFF};
+		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
+		{
+			Error_Handler();
+		}
+		HAL_Delay(10);
+		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 
 		// receive state data delay
 		HAL_Delay(50);
@@ -365,8 +367,8 @@ int main(void)
 		// send state data to PC
 		CDC_Transmit_FS(usb_out, packet_len);
 
-//		memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
-//		memset(state_buffer, 0x0, sizeof(state_buffer));
+		memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
+		memset(state_buffer, 0x0, sizeof(state_buffer));
 
 		HAL_Delay(50);
 
@@ -380,13 +382,10 @@ int main(void)
   		for (i = 2; i < N_JOINTS*POSITION_DATA_SIZE+1; i = i + 2)
   		{
   			uint8_t csend[] = {hex_id, usb_in[i], usb_in[i+1]};
-  	  	if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
-  	  	{
-  	  		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
-  	  		{
-  	  			Error_Handler();
-  	  		}
-  	  	}
+				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+				{
+					Error_Handler();
+				}
   			hex_id++;
   		}
   		hex_id = 0x01;

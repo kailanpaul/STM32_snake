@@ -96,14 +96,14 @@ int main(void)
 		if(usb_in[0] == 'x')
 		{
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-//			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
-//			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
-//			{
-//				Error_Handler();
-//			}
+			uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+			if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+			{
+				Error_Handler();
+			}
 			HAL_Delay(10);
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-			CDC_Transmit_FS("m", 1);
+//			CDC_Transmit_FS("m", 1);
 			memset(usb_in, '\0', 64); // clear buffer
 		}
 

@@ -68,11 +68,11 @@ int main(void)
 
 	while (1)
 	{
-//		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
-//		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
-//		{
-//			Error_Handler();
-//		}
+		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+		if (HAL_CAN_AddTxMessage(&hcan1,&txHeader,csend,&canMailbox) != HAL_OK) // Send Message
+		{
+			Error_Handler();
+		}
 //		if (check)
 //		{
 ////			if (canRX[1] == 2)
@@ -96,7 +96,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 	}
 	if (rxHeader.StdId == 0x30)
 	{
-		if (canRX[0] = 0x09){
+		if (canRX[0] == 0x09){
 			txHeader.StdId = 0x09;
 		}
 		uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
