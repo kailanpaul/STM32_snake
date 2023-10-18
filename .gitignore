@@ -9,7 +9,7 @@
 *.d
 *.launch
 */Debug/
-*/.vscode/
+**/.vscode/
 cube_workspace.code-workspace
 **/project.checksum
 **/idedata.json
