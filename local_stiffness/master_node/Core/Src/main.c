@@ -3,13 +3,44 @@
 #include "usb_device.h"
 #include "Herkulex.h"
 
+<<<<<<< Updated upstream
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+=======
+//void SystemClock_Config(void);
+//static void MX_GPIO_Init(void);
+//static void MX_CAN1_Init(void);
+//static void MX_I2C2_Init(void);
+//static void MX_UART4_Init(void);
+//extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
+
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_CAN1_Init(void);
+static void MX_UART4_Init(void);
+extern uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len);
+static void MX_I2C2_Init(void);
+>>>>>>> Stashed changes
 
 /* USER CODE END Includes */
 
+<<<<<<< Updated upstream
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+=======
+CAN_RxHeaderTypeDef rxHeader; //CAN Bus Receive Header
+CAN_TxHeaderTypeDef txHeader; //CAN Bus Transmit Header
+uint8_t CAN_RX_buffer[8];  //CAN Bus Receive Buffer
+CAN_FilterTypeDef canfil; //CAN Bus Filter
+uint32_t canMailbox; //CAN Bus Mail box variable
+
+uint8_t usb_in[1];
+uint8_t usb_out[18];
+uint16_t len = sizeof(usb_out) / sizeof(usb_out[0]);
+
+uint8_t IMU_address =  0b01101100; //left shifted by 1 - not sure why
+uint8_t I2C_buffer[1];
+>>>>>>> Stashed changes
 
 /* USER CODE END PTD */
 
@@ -294,6 +325,7 @@ int main(void)
 	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(2000);
 
+<<<<<<< Updated upstream
 	int my_command = 0;
 	int i = 0;
 	int hex_id = 0x01;
@@ -315,6 +347,104 @@ int main(void)
 	HAL_Delay(50);
 
   /* USER CODE END 2 */
+=======
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0C, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//			Error_Handler();
+//	if (HAL_I2C_Mem_Write(&hi2c3, IMU_address, 0x01, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//			Error_Handler();
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0D, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//			Error_Handler();
+//	if (HAL_I2C_Mem_Write(&hi2c3, IMU_address, 0x02, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//			Error_Handler();
+//
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0E, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+	//	left = I2C_buffer[0];
+	//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, 0x0F, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	//		Error_Handler();
+	//	right = I2C_buffer[0];
+	//	offset = (left<<8)|right;
+	HAL_Delay(5);
+
+//	I2C_buffer[0] = 3;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	I2C_buffer[0] = 32;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	HAL_Delay(5);
+
+//----------------------------------------------------------------------------------------------------
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	left = I2C_buffer[0];
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	right = I2C_buffer[0];
+//	raw_angle = ((left<<8)|right);
+//	I2C_buffer[0] = left;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	I2C_buffer[0] = right;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	HAL_Delay(1);
+//----------------------------------------------------------------------------------------------------
+
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	left = I2C_buffer[0];
+//	if (HAL_I2C_Mem_Read(&hi2c2, IMU_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	right = I2C_buffer[0];
+//	raw_angle = ((left<<8)|right);
+//	if (raw_angle<400) {
+//		raw_angle+=4095; //or 4095??
+//	}
+//	raw_angle -= 400;
+//
+//	left = raw_angle>>8;
+//	right = raw_angle;
+//	I2C_buffer[0] = left;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	I2C_buffer[0] = right;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//
+//	HAL_Delay(5);
+//
+//	I2C_buffer[0] = 3;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	I2C_buffer[0] = 32;
+//	if (HAL_I2C_Mem_Write(&hi2c2, IMU_address, MANGR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+//		Error_Handler();
+//	HAL_Delay(1);
+
+//	uint8_t csend[] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08}; // Tx Buffer
+
+	usb_out[1] = '\r';
+	usb_out[2] = '\n';
+	while (1) {
+
+//		if(usb_in[0] == 'x')
+//		{
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+//			HAL_Delay(1000);
+//			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+//			memset(usb_in, '\0', 64); // clear buffer
+//			usb_out[0] = '5';
+//			CDC_Transmit_FS(usb_out, 1);
+//		}
+
+		if(get_status(SERVO_ID)) {
+			clear_error(SERVO_ID);
+			torque_on(SERVO_ID);
+			move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
+			HAL_Delay(1000);
+		}
+>>>>>>> Stashed changes
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -329,7 +459,21 @@ int main(void)
 		uint8_t request_packet[] = {0xFF};
 		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
 		{
+<<<<<<< Updated upstream
 			Error_Handler();
+=======
+			usb_out[0] = '5';
+			CDC_Transmit_FS(usb_out, 3);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, -45, 000, H_LED_WHITE);
+		}
+		if (i==100) {
+			usb_out[0] = '9';
+			CDC_Transmit_FS(usb_out, 3);
+			HAL_Delay(50);
+			move_angle(SERVO_ID, 45, 000, H_LED_BLUE);
+			i = 0;
+>>>>>>> Stashed changes
 		}
 		HAL_Delay(10);
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
@@ -367,6 +511,7 @@ int main(void)
 		// send state data to PC
 		CDC_Transmit_FS(usb_out, packet_len);
 
+<<<<<<< Updated upstream
 		memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
 		memset(state_buffer, 0x0, sizeof(state_buffer));
 
@@ -401,6 +546,83 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
+=======
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 72;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 3;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief CAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN1_Init(void)
+{
+
+  /* USER CODE BEGIN CAN1_Init 0 */
+
+  /* USER CODE END CAN1_Init 0 */
+
+  /* USER CODE BEGIN CAN1_Init 1 */
+
+  /* USER CODE END CAN1_Init 1 */
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 9;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_5TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = DISABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* USER CODE END CAN1_Init 2 */
+>>>>>>> Stashed changes
 
 /**
   * @brief System Clock Configuration
@@ -448,6 +670,7 @@ void SystemClock_Config(void)
 }
 
 /**
+<<<<<<< Updated upstream
   * @brief CAN1 Initialization Function
   * @param None
   * @retval None
@@ -504,6 +727,42 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+=======
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+>>>>>>> Stashed changes
   * @brief I2C2 Initialization Function
   * @param None
   * @retval None
@@ -538,6 +797,7 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+<<<<<<< Updated upstream
   * @brief I2C3 Initialization Function
   * @param None
   * @retval None
@@ -568,6 +828,37 @@ static void MX_I2C3_Init(void)
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
+=======
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
+>>>>>>> Stashed changes
 
 }
 
