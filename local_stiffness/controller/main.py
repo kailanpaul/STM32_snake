@@ -23,7 +23,7 @@ DATA_SIZE = 2                                                                   
 SERIAL_PACKET_SIZE = 2 * N_JOINTS * DATA_SIZE                                       # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 0.1                                                                  # frequency of commands (Hz)
+COMMAND_FREQ = 1                                                                    # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
 A = np.pi/3                                                                         # sine amplitude
@@ -142,6 +142,8 @@ def main():
     prev_command_time_sec = round(time.time(), 2)   
 
     time.sleep(0.1)
+
+    print("Start")
 
     while (1):
 
