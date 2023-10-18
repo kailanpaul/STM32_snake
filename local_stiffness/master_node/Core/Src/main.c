@@ -38,7 +38,7 @@
 
 #define SERVO_ID 253
 
-#define N_JOINTS 2
+#define N_JOINTS 5
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
 #define SERIAL_ENCODE_MASK 0b10000000
@@ -296,7 +296,8 @@ int main(void)
 
 	int my_command = 0;
 	int i = 0;
-	int hex_id = 0x01;
+  int index = 0;
+  int iter = 0;
 
 	// get encoder initial reading and use to calibrate
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -326,7 +327,7 @@ int main(void)
 
   	// send request to other segments over CAN for their data
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-		uint8_t request_packet[] = {0xFF};
+		uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
 		{
 			Error_Handler();
@@ -337,7 +338,7 @@ int main(void)
 		// receive state data delay
 		HAL_Delay(50);
 
-		for (i = 0; i < (sizeof CAN_RX_buffer / sizeof CAN_RX_buffer[0]); i++)
+		for (i = 0; i < sizeof state_buffer; i++)
 		{
 			state_buffer[i] = CAN_RX_buffer[i];
 		}
@@ -358,17 +359,37 @@ int main(void)
 			Error_Handler();
 		right = I2C_buffer[0];
 		my_state_buffer[2] = right;
-		my_state_buffer[3] = left;
+		my_state_buffer[3] = left;    for (int iter = 0; iter > sizeof my_state_buffer; iter++)
+    {
+      usb_out[index] = my_state_buffer[iter];
+      index++;
+    }
+    for (int iter = 0; iter > sizeof state_buffer; iter++)
+    {
+      usb_out[index] = my_state_buffer[iter];
+      index++;
+    }
+    index = 0;
+		// memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
+		// memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
 
-		// concatenate the two buffers, from j=0 (tail) to j=N-1 (head)
-		memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
-		memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
+    for (iter = 0; iter < sizeof my_state_buffer; iter++)
+    {
+      usb_out[index] = my_state_buffer[iter];
+      index++;
+    }
+    for (iter = 0; iter < sizeof state_buffer; iter++)
+    {
+      usb_out[index] = state_buffer[iter];
+      index++;
+    }
+    index = 0;
 
 		// send state data to PC
 		CDC_Transmit_FS(usb_out, packet_len);
 
-		memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
-		memset(state_buffer, 0x0, sizeof(state_buffer));
+		// memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
+		// memset(state_buffer, 0x0, sizeof(state_buffer));
 
 		HAL_Delay(50);
 
@@ -380,18 +401,16 @@ int main(void)
   		my_command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
 
   		// send rest over CAN
-  		for (i = 2; i < N_JOINTS*POSITION_DATA_SIZE+1; i = i + 2)
+  		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
   		{
-  			uint8_t csend[] = {hex_id, usb_in[i], usb_in[i+1]};
+  			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
 				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 				{
 					Error_Handler();
 				}
-  			hex_id++;
   		}
-  		hex_id = 0x01;
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-			memset(usb_in, '\0', 64);
+			memset(usb_in, '\0', sizeof usb_in);
 			HAL_Delay(50);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
