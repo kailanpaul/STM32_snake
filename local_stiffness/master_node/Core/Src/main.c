@@ -292,8 +292,6 @@ int main(void)
 
 	int my_command = 0;
 	int i = 0;
-  int index = 0;
-  int iter = 0;
   uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 	// get encoder initial reading and use to calibrate
@@ -329,61 +327,6 @@ int main(void)
 			Error_Handler();
 		}
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-
-		// receive state data delay
-		HAL_Delay(25);
-
-		__disable_irq();
-		for (i = 0; i < sizeof state_buffer; i++)
-		{
-			state_buffer[i] = CAN_RX_buffer[i];
-		}
-		__enable_irq();
-
-  	// add own data
-  	// get position data (2 bytes each) and add to packet
-  	get_position_bytes(SERVO_ID, position_data_array);
-  	my_state_buffer[0] = position_data_array[0];
-  	my_state_buffer[1] = (position_data_array[1] | SERIAL_ENCODE_MASK); // encode servo data MSB to create contrast to encoder data
-
-  	// get encoder reading (2 bytes each) and add to packet
-		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-			Error_Handler();
-		left = I2C_buffer[0];
-		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-			Error_Handler();
-		right = I2C_buffer[0];
-		my_state_buffer[2] = right;
-		my_state_buffer[3] = left;
-
-//		for (int iter = 0; iter > sizeof my_state_buffer; iter++)
-//    {
-//      usb_out[index] = my_state_buffer[iter];
-//      index++;
-//    }
-//    for (int iter = 0; iter > sizeof state_buffer; iter++)
-//    {
-//      usb_out[index] = my_state_buffer[iter];
-//      index++;
-//    }
-//    index = 0;
-		// memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
-		// memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
-
-    for (iter = 0; iter < sizeof my_state_buffer; iter++)
-    {
-      usb_out[index] = my_state_buffer[iter];
-      index++;
-    }
-    for (iter = 0; iter < sizeof state_buffer; iter++)
-    {
-      usb_out[index] = state_buffer[iter];
-      index++;
-    }
-    index = 0;
-
-		// send state data to PC
-		CDC_Transmit_FS(usb_out, packet_len);
 
 		// memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
 		// memset(state_buffer, 0x0, sizeof(state_buffer));
@@ -679,10 +622,65 @@ static void MX_GPIO_Init(void)
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
+	int ii = 0;
+  int index = 0;
+  int iter = 0;
+	__disable_irq();
 	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
 	{
 		Error_Handler();
 	}
+	for (ii = 0; ii < sizeof state_buffer; ii++)
+	{
+		state_buffer[ii] = CAN_RX_buffer[ii];
+	}
+
+	// add own data
+	// get position data (2 bytes each) and add to packet
+	get_position_bytes(SERVO_ID, position_data_array);
+	my_state_buffer[0] = position_data_array[0];
+	my_state_buffer[1] = (position_data_array[1] | SERIAL_ENCODE_MASK); // encode servo data MSB to create contrast to encoder data
+
+	// get encoder reading (2 bytes each) and add to packet
+	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	left = I2C_buffer[0];
+	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+		Error_Handler();
+	right = I2C_buffer[0];
+	my_state_buffer[2] = right;
+	my_state_buffer[3] = left;
+
+//		for (int iter = 0; iter > sizeof my_state_buffer; iter++)
+//    {
+//      usb_out[index] = my_state_buffer[iter];
+//      index++;
+//    }
+//    for (int iter = 0; iter > sizeof state_buffer; iter++)
+//    {
+//      usb_out[index] = my_state_buffer[iter];
+//      index++;
+//    }
+//    index = 0;
+	// memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
+	// memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
+
+	for (iter = 0; iter < sizeof my_state_buffer; iter++)
+	{
+		usb_out[index] = my_state_buffer[iter];
+		index++;
+	}
+	for (iter = 0; iter < sizeof state_buffer; iter++)
+	{
+		usb_out[index] = state_buffer[iter];
+		index++;
+	}
+	index = 0;
+
+	// send state data to PC
+	CDC_Transmit_FS(usb_out, packet_len);
+	__enable_irq();
+
 }
 /* USER CODE END 4 */
 

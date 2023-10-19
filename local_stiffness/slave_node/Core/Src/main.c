@@ -206,48 +206,8 @@ int main(void)
   {
 
   	// check if error is raised and reset if so
-//  	reset_and_zero_pos();
+  	reset_and_zero_pos();
 
-		// if master sends message over CAN:
-  	// determine if it is my command or a request
-		if (rxHeader.StdId == MASTER_CAN_ID)
-		{
-			if (CAN_RX_buffer[0] == txHeader.StdId)
-			{
-				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
-				// grab command and execute
-				__disable_irq();
-				my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
-				__enable_irq();
-				move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
-			}
-			else if (CAN_RX_buffer[0] == request_packet[0])
-			{
-		  	// get position data (2 bytes each) and add to packet
-		  	get_position_bytes(SERVO_ID, position_data_array);
-		  	csend[0] = position_data_array[0];
-		  	csend[1] = (position_data_array[1] | SERIAL_ENCODE_MASK);
-
-		  	// get encoder reading (2 bytes each) and add to packet
-				if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-					Error_Handler();
-				left = I2C_buffer[0];
-				if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-					Error_Handler();
-				right = I2C_buffer[0];
-				csend[2] = right;
-				csend[3] = left;
-
-				HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-				// send over CAN
-				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
-				{
-					Error_Handler();
-				}
-				HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
-			}
-		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -532,10 +492,52 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
+	__disable_irq();
 	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
 	{
 		Error_Handler();
 	}
+	// if master sends message over CAN:
+	// determine if it is my command or a request
+	if (rxHeader.StdId == MASTER_CAN_ID)
+	{
+		if (CAN_RX_buffer[0] == txHeader.StdId)
+		{
+			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
+			// grab command and execute
+			__disable_irq();
+			my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
+			__enable_irq();
+			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
+			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
+		}
+		else if (CAN_RX_buffer[0] == request_packet[0])
+		{
+	  	// get position data (2 bytes each) and add to packet
+	  	get_position_bytes(SERVO_ID, position_data_array);
+	  	csend[0] = position_data_array[0];
+	  	csend[1] = (position_data_array[1] | SERIAL_ENCODE_MASK);
+
+	  	// get encoder reading (2 bytes each) and add to packet
+			if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+				Error_Handler();
+			left = I2C_buffer[0];
+			if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+				Error_Handler();
+			right = I2C_buffer[0];
+			csend[2] = right;
+			csend[3] = left;
+
+			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+			// send over CAN
+			if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+			{
+				Error_Handler();
+			}
+			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+		}
+	}
+	__enable_irq();
 }
 /* USER CODE END 4 */
 
