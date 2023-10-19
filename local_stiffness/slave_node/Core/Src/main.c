@@ -1,22 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "Herkulex.h"
@@ -57,7 +38,7 @@
 
 #define MASTER_CAN_ID 0x30
 
-#define N_JOINTS 1
+#define N_JOINTS 3
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
 #define SERIAL_ENCODE_MASK 0b10000000
@@ -86,7 +67,7 @@ uint8_t CAN_RX_buffer[8];  // CAN Bus Receive Buffer
 CAN_FilterTypeDef canfil; // CAN Bus Filter
 uint32_t canMailbox; // CAN Bus Mail box variable
 
-uint8_t encoder_address = 0b01101100; 	// left-shifted by 1 - not sure why
+static uint8_t encoder_address = 0b01101100; 	// 0b01101100 left-shifted by 1 - not sure why
 uint8_t I2C_buffer[1];
 uint8_t position_data_array[2];
 
@@ -111,12 +92,8 @@ void Error_Handler(void);
 
 uint16_t left;
 uint16_t right;
-int raw;
-int raw_angle;
-int deg_angle;
-int dec_angle;
 uint8_t csend[(SEA_DATA_SIZE+POSITION_DATA_SIZE)]; // CAN Tx Buffer
-uint8_t request_packet[] = {0xFF}; // request byte from master
+static uint8_t request_packet[] = {0xFF}; // request byte from master
 
 // reset and zero servo if error flag is raised
 void reset_and_zero_pos()
@@ -211,7 +188,7 @@ int main(void)
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 		Error_Handler();
 	right = I2C_buffer[0];
-	raw_angle = ((left<<8)|right);
+
 	I2C_buffer[0] = left;
 	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 		Error_Handler();
@@ -219,6 +196,7 @@ int main(void)
 	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 		Error_Handler();
 	HAL_Delay(50);
+
 
   /* USER CODE END 2 */
 
@@ -238,9 +216,10 @@ int main(void)
 			{
 				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 				// grab command and execute
+				__disable_irq();
 				my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
+				__enable_irq();
 				move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-				HAL_Delay(50);
 				HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
 			}
 			else if (CAN_RX_buffer[0] == request_packet[0])
@@ -249,8 +228,6 @@ int main(void)
 		  	get_position_bytes(SERVO_ID, position_data_array);
 		  	csend[0] = position_data_array[0];
 		  	csend[1] = (position_data_array[1] | SERIAL_ENCODE_MASK);
-
-		  	HAL_Delay(50);
 
 		  	// get encoder reading (2 bytes each) and add to packet
 				if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -268,14 +245,9 @@ int main(void)
 				{
 					Error_Handler();
 				}
-				HAL_Delay(10);
 				HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 			}
 		}
-
-		HAL_Delay(50);
-//		HAL_GPIO_TogglePin(YELLOW_GPIO_PORT, YELLOW_LED);
-//		HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

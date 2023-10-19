@@ -18,7 +18,7 @@ import time
 
 # constants
 
-N_JOINTS = 2                                                                        # number of joints
+N_JOINTS = 3                                                                        # number of joints
 DATA_SIZE = 2                                                                       # all data (SEA and servo) is 2 bytes in size                                            
 SERIAL_PACKET_SIZE = 2 * N_JOINTS * DATA_SIZE                                       # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
@@ -34,8 +34,8 @@ K = 3.38                                                                        
 K_D = 0.4*K                                                                         # admittance/impedance constant
 K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
-ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
-ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
+ROM_P = np.deg2rad(40)                                                              # range of motion positive limit
+ROM_M = -np.deg2rad(40)                                                             # range of motion negative limit
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -127,7 +127,8 @@ def main():
 
     sea_data = np.zeros(N_JOINTS)
     servo_pos = np.zeros(N_JOINTS)
-    desired_pos = np.zeros(N_JOINTS)                                
+    desired_pos = np.zeros(N_JOINTS) 
+    desired_pos_fb = np.zeros(N_JOINTS)                                
 
     ser = sniff()                                                  
 
@@ -154,21 +155,24 @@ def main():
             # FEEDBACK..
 
             data = ser.read(SERIAL_PACKET_SIZE)                                                     # read 2 bytes
-            serial_packet = [b for b in data]                                                       # put bites in array
+            serial_packet = [b for b in data]                                                       # put bytes in array
             print(serial_packet)
-            for i in range(0, (2*N_JOINTS)+1, DATA_SIZE):                                           # iterate through array in 2-byte chunks
+            # print(serial_packet)
+            for i in range(0, SERIAL_PACKET_SIZE-1, DATA_SIZE):                                     # iterate through serial packet in 2-byte chunks
                 if ((serial_packet[i+1] & SERIAL_DECODE_MASK) == SERIAL_DECODE_MASK):               # mask MSB with 0b1000000 - treat as pos data if result is 1, else SEA data
                     idx = int(i/4)
                     servo_pos[idx] = bytes2pos(serial_packet[i:i+DATA_SIZE])                        # convert byte type to raw 10-bit position and then angle
                 else:
                     idx = int((i-2)/4)
                     sea_data[idx] = bytes2ang(serial_packet[i:i+DATA_SIZE])                         # convert byte type to raw 12-bit position and then deflection angle
+            print(np.rad2deg(servo_pos))
+            print(np.rad2deg(sea_data))
 
             # ..CONTROL
 
-            if ((current_time_sec - prev_command_time_sec) >= COMMAND_PERIOD):                      # check if command period has passed since last command                                       
-                desired_pos = gpg((current_time_sec - start_time), N_JOINTS)                        # calculate desired pose command using GPG for current time (in seconds)
-                prev_command_time_sec = current_time_sec                                            # update time of previous command
+            # if ((current_time_sec - prev_command_time_sec) >= COMMAND_PERIOD):                      # check if command period has passed since last command                                       
+            #     desired_pos = gpg((current_time_sec - start_time), N_JOINTS)                        # calculate desired pose command using GPG for current time (in seconds)
+            #     prev_command_time_sec = current_time_sec                                            # update time of previous command
 
             desired_pos_fb = desired_pos + sea_data*K*K_AI                                          # addition for admittance, subtraction for impedance
 
@@ -180,6 +184,8 @@ def main():
                     desired_pos_fb[idx] = ROM_M
                 else:
                     continue
+
+            # print(np.rad2deg(desired_pos_fb))
 
             send_command(ser, pos2bytes(np.rad2deg(desired_pos_fb)))                                # send command to STM32 over serial
 

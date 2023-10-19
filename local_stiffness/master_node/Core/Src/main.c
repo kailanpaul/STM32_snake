@@ -38,7 +38,7 @@
 
 #define SERVO_ID 253
 
-#define N_JOINTS 5
+#define N_JOINTS 3
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
 #define SERIAL_ENCODE_MASK 0b10000000
@@ -64,8 +64,8 @@ UART_HandleTypeDef huart4;
 
 CAN_RxHeaderTypeDef rxHeader; // CAN Bus Receive Header
 CAN_TxHeaderTypeDef txHeader; // CAN Bus Transmit Header
-//uint8_t CAN_RX_buffer[(N_JOINTS-1) * (POSITION_DATA_SIZE + SEA_DATA_SIZE)]; // CAN Bus Receive Buffer
-uint8_t CAN_RX_buffer[8];
+uint8_t CAN_RX_buffer[(N_JOINTS-1) * (POSITION_DATA_SIZE + SEA_DATA_SIZE)]; // CAN Bus Receive Buffer
+//uint8_t CAN_RX_buffer[8];
 CAN_FilterTypeDef canfil; // CAN Bus Filter
 uint32_t canMailbox; // CAN Bus Mail box variable
 
@@ -103,13 +103,9 @@ void Error_Handler(void);
 
 uint16_t left;
 uint16_t right;
-int raw;
-int raw_angle;
-int deg_angle;
-int dec_angle;
 uint8_t csend[8]; // CAN Tx Buffer
 //uint8_t request_packet[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-uint8_t request_packet[] = {0xFF};
+//uint8_t request_packet[] = {0xFF};
 
 // reset and zero servo if error flag is raised
 void reset_and_zero_pos()
@@ -298,6 +294,7 @@ int main(void)
 	int i = 0;
   int index = 0;
   int iter = 0;
+  uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 	// get encoder initial reading and use to calibrate
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -306,7 +303,7 @@ int main(void)
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 		Error_Handler();
 	right = I2C_buffer[0];
-	raw_angle = ((left<<8)|right);
+
 	I2C_buffer[0] = left;
 	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
 		Error_Handler();
@@ -323,33 +320,31 @@ int main(void)
   {
 
   	// check if error is raised and reset if so
-//  	reset_and_zero_pos();
+  	reset_and_zero_pos();
 
   	// send request to other segments over CAN for their data
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-		uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
 		{
 			Error_Handler();
 		}
-		HAL_Delay(10);
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 
 		// receive state data delay
-		HAL_Delay(50);
+		HAL_Delay(25);
 
+		__disable_irq();
 		for (i = 0; i < sizeof state_buffer; i++)
 		{
 			state_buffer[i] = CAN_RX_buffer[i];
 		}
+		__enable_irq();
 
   	// add own data
   	// get position data (2 bytes each) and add to packet
   	get_position_bytes(SERVO_ID, position_data_array);
   	my_state_buffer[0] = position_data_array[0];
   	my_state_buffer[1] = (position_data_array[1] | SERIAL_ENCODE_MASK); // encode servo data MSB to create contrast to encoder data
-
-  	HAL_Delay(50);
 
   	// get encoder reading (2 bytes each) and add to packet
 		if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -359,17 +354,19 @@ int main(void)
 			Error_Handler();
 		right = I2C_buffer[0];
 		my_state_buffer[2] = right;
-		my_state_buffer[3] = left;    for (int iter = 0; iter > sizeof my_state_buffer; iter++)
-    {
-      usb_out[index] = my_state_buffer[iter];
-      index++;
-    }
-    for (int iter = 0; iter > sizeof state_buffer; iter++)
-    {
-      usb_out[index] = my_state_buffer[iter];
-      index++;
-    }
-    index = 0;
+		my_state_buffer[3] = left;
+
+//		for (int iter = 0; iter > sizeof my_state_buffer; iter++)
+//    {
+//      usb_out[index] = my_state_buffer[iter];
+//      index++;
+//    }
+//    for (int iter = 0; iter > sizeof state_buffer; iter++)
+//    {
+//      usb_out[index] = my_state_buffer[iter];
+//      index++;
+//    }
+//    index = 0;
 		// memcpy(&usb_out, &my_state_buffer, sizeof my_state_buffer);
 		// memcpy(&usb_out + sizeof my_state_buffer, &state_buffer, sizeof state_buffer);
 
@@ -391,8 +388,6 @@ int main(void)
 		// memset(my_state_buffer, 0x0, sizeof(my_state_buffer));
 		// memset(state_buffer, 0x0, sizeof(state_buffer));
 
-		HAL_Delay(50);
-
 		// check if command is received and if so, execute it
   	if (usb_in[0] != 0 && usb_in[1] != 0) // i.e. if usb_in not empty
   	{
@@ -411,7 +406,6 @@ int main(void)
   		}
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 			memset(usb_in, '\0', sizeof usb_in);
-			HAL_Delay(50);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
 
