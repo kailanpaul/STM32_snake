@@ -3,6 +3,7 @@ import sys
 import os
 import serial.tools.list_ports
 from time import sleep
+import numpy as np
 
 # sniff for devices
 while True:
@@ -66,12 +67,32 @@ while True:
 #         break
 # ser.close()
 
+# convert servo position data from bytes to raw position value and then to angle in rad 
+def bytes2pos(pos_data_packet):
+    return np.deg2rad((((pos_data_packet[1] & 0x03) << 8 | pos_data_packet[0]) - 513) * 0.326)
+
+# convert SEA encoder data from bytes to angle (radians)
+def bytes2ang(sea_data_packet):
+    sea_raw = (sea_data_packet[1] << 8) | sea_data_packet[0]
+    calibrated_angle = (sea_raw * 2 * np.pi) / 4095
+    if (calibrated_angle > np.pi):
+        calibrated_angle -= 2*np.pi
+    return calibrated_angle
+
+sea_data = np.zeros(3)
+servo_pos = np.zeros(3)
+
 # send and listen
 while True:
-    ser.write(str(input(">> ")).encode())
+    # ser.write(str(input(">> ")).encode())
     try:
-        var = ser.read()
-        print(var.decode())
+        data = ser.read(5)                                                     # read 2 bytes
+        serial_packet = [b for b in data]                                                       # put bytes in array
+        print("Serial packet: ", serial_packet)
+        servo_pos[serial_packet[0]] = bytes2pos(serial_packet[1:3])
+        sea_data[serial_packet[0]] = bytes2ang(serial_packet[3:5])
+        print("Servo data: ", np.rad2deg(servo_pos))
+        print("SEA data: ", np.rad2deg(sea_data))
     except serial.serialutil.SerialException:
         print("Device lost :( Exiting...")
         break

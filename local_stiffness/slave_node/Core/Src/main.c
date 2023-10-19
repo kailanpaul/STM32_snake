@@ -530,7 +530,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
 			// send over CAN
-			if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+			if (HAL_CAN_AddTxMessage(hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 			{
 				Error_Handler();
 			}
