@@ -18,12 +18,12 @@ import time
 
 # constants
 
-N_JOINTS = 3                                                                        # number of joints
+N_JOINTS = 4                                                                        # number of joints
 DATA_SIZE = 2                                                                       # all data (SEA and servo) is 2 bytes in size                                            
 SERIAL_PACKET_SIZE = 2 * DATA_SIZE + 1                                              # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 20                                                                   # frequency of commands (Hz)
+COMMAND_FREQ = 12                                                                   # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
 A = np.pi/6                                                                         # sine amplitude
@@ -34,8 +34,8 @@ K = 3.38                                                                        
 K_D = 0.4*K                                                                         # admittance/impedance constant
 K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
-ROM_P = np.deg2rad(40)                                                              # range of motion positive limit
-ROM_M = -np.deg2rad(40)                                                             # range of motion negative limit
+ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
+ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ def main():
             data = ser.read(SERIAL_PACKET_SIZE)                                                     # read 2 bytes
             serial_packet = [b for b in data]                                                       # put bytes in array
 
-            # print(serial_packet)
+            print(serial_packet)
             # for i in range(0, SERIAL_PACKET_SIZE-1, DATA_SIZE):                                     # iterate through serial packet in 2-byte chunks
             #     if ((serial_packet[i+1] & SERIAL_DECODE_MASK) == SERIAL_DECODE_MASK):               # mask MSB with 0b1000000 - treat as pos data if result is 1, else SEA data
             #         idx = int(i/4)
@@ -174,7 +174,10 @@ def main():
                 desired_pos = gpg((current_time_sec - start_time), N_JOINTS)                        # calculate desired pose command using GPG for current time (in seconds)
                 prev_command_time_sec = current_time_sec                                            # update time of previous command
 
-            desired_pos_fb = desired_pos + sea_data*K*K_AI                                          # addition for admittance, subtraction for impedance
+            desired_pos_fb = desired_pos - sea_data*K*K_AI                                          # addition for admittance, subtraction for impedance
+
+            # print(np.rad2deg(desired_pos))
+        
 
             # soft limit of +/- 50 deg
             for idx, x in np.ndenumerate(desired_pos_fb):
@@ -185,8 +188,9 @@ def main():
                 else:
                     continue
 
-            print(np.rad2deg(desired_pos_fb))
+            # print(np.rad2deg(desired_pos_fb))
             send_command(ser, pos2bytes(np.rad2deg(desired_pos_fb)))                                # send command to STM32 over serial
+            print(pos2bytes(np.rad2deg(desired_pos_fb)))
 
         except serial.serialutil.SerialException:
             print("Device lost :( Exiting...")
