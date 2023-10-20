@@ -38,7 +38,7 @@
 
 #define MASTER_CAN_ID 0x30
 
-#define N_JOINTS 3
+#define N_JOINTS 4
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
 #define SERIAL_ENCODE_MASK 0b10000000
@@ -205,7 +205,7 @@ int main(void)
   {
 
   	// check if error is raised and reset if so
-  	reset_and_zero_pos();
+  	// reset_and_zero_pos();
 
     /* USER CODE END WHILE */
 
@@ -504,9 +504,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 		{
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 			// grab command and execute
-//			__disable_irq();
+			// __disable_irq();
 			my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
-			__enable_irq();
+			// __enable_irq();
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
 		}
