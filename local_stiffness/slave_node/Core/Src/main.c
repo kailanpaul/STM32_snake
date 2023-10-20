@@ -93,7 +93,8 @@ void Error_Handler(void);
 uint16_t left;
 uint16_t right;
 uint8_t csend[(SEA_DATA_SIZE+POSITION_DATA_SIZE)]; // CAN Tx Buffer
-static uint8_t request_packet[] = {0xFF}; // request byte from master
+const uint8_t request_packet[] = {0xFF}; // request byte from master
+static int my_command = 0;
 
 // reset and zero servo if error flag is raised
 void reset_and_zero_pos()
@@ -178,8 +179,6 @@ int main(void)
 	herkulex_init();
 	move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
 	HAL_Delay(2000);
-
-	int my_command = 0;
 
 	// get encoder initial reading and use to calibrate
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -505,7 +504,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 		{
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 			// grab command and execute
-			__disable_irq();
+//			__disable_irq();
 			my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
 			__enable_irq();
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
