@@ -319,6 +319,7 @@ int main(void)
 
   	// check if error is raised and reset if so
 //  	reset_and_zero_pos();
+
   	// add own data
   	// get position data (2 bytes each) and add to packet
   	__disable_irq();
@@ -361,6 +362,7 @@ int main(void)
   		// send rest over CAN
   		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
   		{
+  			HAL_Delay(5);
   			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
 				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 				{
