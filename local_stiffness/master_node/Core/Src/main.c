@@ -22,8 +22,8 @@
 #define RED_GPIO_PORT                          	GPIOC
 #define BLUE_LED                               	GPIO_PIN_15
 #define BLUE_GPIO_PORT                         	GPIOB
-#define SHIELD_STAT_LED													GPIO_PIN_14
-#define SHIELD_STAT_GPIO_PORT										GPIOB
+#define SHIELD_STAT_LED				GPIO_PIN_14
+#define SHIELD_STAT_GPIO_PORT			GPIOB
 
 #define I2C_TIMEOUT 1000
 
@@ -200,7 +200,7 @@ int main(void)
 	int my_command = 0;
 	int i = 0;
 	my_state_buffer[0] = 0;
-  uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  	uint8_t request_packet[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 	// get encoder initial reading and use to calibrate
 	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
@@ -229,7 +229,6 @@ int main(void)
 
   	// add own data
   	__disable_irq();
-
   	// get position data (2 bytes each) and add to packet
   	get_position_bytes(SERVO_ID, position_data_array);
   	my_state_buffer[1] = position_data_array[0];
@@ -250,17 +249,17 @@ int main(void)
   	__enable_irq();
 
   	// send request to other segments over CAN for their data
-		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
-		{
-			Error_Handler();
-		}
-		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
+	if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
+	{
+		Error_Handler();
+	}
+	HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 
-		// receive data
-		HAL_Delay(10);
+	// receive data
+	HAL_Delay(10);
 
-		// check if command is received and if so, execute it
+	// check if command is received and if so, execute it
   	if (usb_in[0] != 0 ) // i.e. if usb_in not empty
   	{
   		HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
@@ -270,21 +269,23 @@ int main(void)
 
   		// send rest over CAN, one by one
   		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
-  		{
+  		{	
+			//----------------------------------------------------------------------------------------
   			HAL_Delay(8); // small delay so CAN mailbox does not get full
+			//----------------------------------------------------------------------------------------
   			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
-				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
-				{
-					Error_Handler();
-				}
+			if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+			{
+				Error_Handler();
+			}
   		}
   		__disable_irq();
 
   		// execute own command
-			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-			__enable_irq();
-			memset(usb_in, '\0', sizeof usb_in);
-			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
+		move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
+		__enable_irq();
+		memset(usb_in, '\0', sizeof usb_in);
+		HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
 	/* USER CODE END WHILE */
 
@@ -559,13 +560,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 
 	__disable_irq();
 
-	int ii = 0;
 	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
 	{
 		Error_Handler();
 	}
 
 	// packet structure: {ID, SERVO_DATA1, SERVO_DATA2, SEA_DATA1, SEA_DATA2}
+	int ii = 0;
 	usb_out[0] = rxHeader.StdId;
 	for (ii = 0; ii < (POSITION_DATA_SIZE + SEA_DATA_SIZE); ii++)
 	{
