@@ -14,12 +14,18 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define YELLOW_LED                             GPIO_PIN_13
-#define YELLOW_GPIO_PORT                       GPIOC
-#define RED_LED                                GPIO_PIN_14
-#define RED_GPIO_PORT                          GPIOC
-#define BLUE_LED                               GPIO_PIN_15
-#define BLUE_GPIO_PORT                         GPIOB
+#define YELLOW_LED                             	GPIO_PIN_13
+#define YELLOW_GPIO_PORT                       	GPIOC
+#define RED_LED                                	GPIO_PIN_14
+#define RED_GPIO_PORT                          	GPIOC
+#define BLUE_LED                               	GPIO_PIN_15
+#define BLUE_GPIO_PORT                         	GPIOB
+#define SHIELD_STAT_LED													GPIO_PIN_14
+#define SHIELD_STAT_GPIO_PORT										GPIOB
+#define EYE_1_GPIO_PORT													GPIOA
+#define EYE_1_LED																GPIO_PIN_2
+#define EYE_2_GPIO_PORT													GPIOC
+#define EYE_2_LED																GPIO_PIN_3
 
 #define I2C_TIMEOUT 1000
 
@@ -210,7 +216,21 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  	// flash shield status LED
+  	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_SET);
+  	HAL_Delay(250);
+  	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_RESET);
 
+  	// eye code
+  	if (txHeader.StdId == N_JOINTS-1)
+  	{
+  		HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_SET);
+  		HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_SET);
+  		HAL_Delay(rand() % (5000 - 200 + 1) + 200);
+  		HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_RESET);
+  		HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_RESET);
+  		HAL_Delay(100);
+  	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

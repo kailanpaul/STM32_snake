@@ -22,6 +22,8 @@
 #define RED_GPIO_PORT                          GPIOC
 #define BLUE_LED                               GPIO_PIN_15
 #define BLUE_GPIO_PORT                         GPIOB
+#define SHIELD_STAT_LED													GPIO_PIN_14
+#define SHIELD_STAT_GPIO_PORT										GPIOB
 
 #define I2C_TIMEOUT 1000
 
@@ -222,6 +224,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  	// shield status on during runtime
+  	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_SET);
 
   	// add own data
   	__disable_irq();
@@ -282,7 +286,6 @@ int main(void)
 			memset(usb_in, '\0', sizeof usb_in);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
-
 	/* USER CODE END WHILE */
 
 	/* USER CODE BEGIN 3 */
