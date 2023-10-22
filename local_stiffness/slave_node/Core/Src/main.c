@@ -38,7 +38,10 @@
 
 #define MASTER_CAN_ID 0x30
 
-#define N_JOINTS 4
+//---------------------------------------------------------------------------------
+#define N_JOINTS 4 // IMPORTANT
+//---------------------------------------------------------------------------------
+
 #define SEA_DATA_SIZE 2
 #define POSITION_DATA_SIZE 2
 #define SERIAL_ENCODE_MASK 0b10000000
@@ -158,7 +161,11 @@ int main(void)
 	txHeader.DLC = 8; // number of bytes to be transmitted - max 8
 	txHeader.IDE = CAN_ID_STD;
 	txHeader.RTR = CAN_RTR_DATA;
-	txHeader.StdId = 0x01;
+
+	//---------------------------------------------------------------------------------
+	txHeader.StdId = 0x01; // IMPORTANT
+	//---------------------------------------------------------------------------------
+
 	txHeader.ExtId = 0x02;
 	txHeader.TransmitGlobalTime = DISABLE;
 
@@ -203,9 +210,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-  	// check if error is raised and reset if so
-  	// reset_and_zero_pos();
 
     /* USER CODE END WHILE */
 
@@ -496,21 +500,20 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 	{
 		Error_Handler();
 	}
+
 	// if master sends message over CAN:
 	// determine if it is my command or a request
 	if (rxHeader.StdId == MASTER_CAN_ID)
 	{
-		if (CAN_RX_buffer[0] == txHeader.StdId)
+		if (CAN_RX_buffer[0] == txHeader.StdId) // if command
 		{
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 			// grab command and execute
-			// __disable_irq();
 			my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
-			// __enable_irq();
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
 		}
-		else if (CAN_RX_buffer[0] == request_packet[0])
+		else if (CAN_RX_buffer[0] == request_packet[0]) // if state data request
 		{
 	  	// get position data (2 bytes each) and add to packet
 	  	get_position_bytes(SERVO_ID, position_data_array);
@@ -528,11 +531,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 			csend[3] = left;
 
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-			// send over CAN
+
+			// send over CAN back to master
 			if (HAL_CAN_AddTxMessage(hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 			{
 				Error_Handler();
 			}
+
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 		}
 	}
