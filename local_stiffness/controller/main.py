@@ -18,7 +18,7 @@ import time
 
 # constants
 
-N_JOINTS = 4                                                                        # number of joints
+N_JOINTS = 8                                                                        # number of joints
 DATA_SIZE = 2                                                                       # all data (SEA and servo) is 2 bytes in size                                            
 SERIAL_PACKET_SIZE = 2 * DATA_SIZE + 1                                              # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side

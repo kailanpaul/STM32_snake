@@ -16,12 +16,12 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define YELLOW_LED                             GPIO_PIN_13
-#define YELLOW_GPIO_PORT                       GPIOC
-#define RED_LED                                GPIO_PIN_14
-#define RED_GPIO_PORT                          GPIOC
-#define BLUE_LED                               GPIO_PIN_15
-#define BLUE_GPIO_PORT                         GPIOB
+#define YELLOW_LED                             	GPIO_PIN_13
+#define YELLOW_GPIO_PORT                       	GPIOC
+#define RED_LED                                	GPIO_PIN_14
+#define RED_GPIO_PORT                          	GPIOC
+#define BLUE_LED                               	GPIO_PIN_15
+#define BLUE_GPIO_PORT                         	GPIOB
 #define SHIELD_STAT_LED													GPIO_PIN_14
 #define SHIELD_STAT_GPIO_PORT										GPIOB
 
@@ -41,7 +41,7 @@
 #define SERVO_ID 253
 
 //---------------------------------------------------------------------------------
-#define N_JOINTS 4 // IMPORTANT
+#define N_JOINTS 8 // IMPORTANT
 //---------------------------------------------------------------------------------
 
 #define SEA_DATA_SIZE 2
@@ -271,7 +271,7 @@ int main(void)
   		// send rest over CAN, one by one
   		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
   		{
-  			HAL_Delay(5); // small delay so CAN mailbox does not get full
+  			HAL_Delay(8); // small delay so CAN mailbox does not get full
   			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
 				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 				{

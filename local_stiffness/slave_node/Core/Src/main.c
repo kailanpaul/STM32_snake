@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "Herkulex.h"
+#include "time.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -45,7 +46,7 @@
 #define MASTER_CAN_ID 0x30
 
 //---------------------------------------------------------------------------------
-#define N_JOINTS 4 // IMPORTANT
+#define N_JOINTS 8 // IMPORTANT
 //---------------------------------------------------------------------------------
 
 #define SEA_DATA_SIZE 2
@@ -169,7 +170,7 @@ int main(void)
 	txHeader.RTR = CAN_RTR_DATA;
 
 	//---------------------------------------------------------------------------------
-	txHeader.StdId = 0x01; // IMPORTANT
+	txHeader.StdId = 0x07; // IMPORTANT
 	//---------------------------------------------------------------------------------
 
 	txHeader.ExtId = 0x02;
@@ -216,10 +217,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  	// flash shield status LED
+  	// shield status LED
   	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_SET);
-  	HAL_Delay(250);
-  	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_RESET);
 
   	// eye code
   	if (txHeader.StdId == N_JOINTS-1)
