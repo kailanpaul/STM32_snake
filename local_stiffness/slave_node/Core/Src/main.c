@@ -21,12 +21,12 @@
 #define RED_GPIO_PORT                          	GPIOC
 #define BLUE_LED                               	GPIO_PIN_15
 #define BLUE_GPIO_PORT                         	GPIOB
-#define SHIELD_STAT_LED				GPIO_PIN_14
-#define SHIELD_STAT_GPIO_PORT			GPIOB
-#define EYE_1_GPIO_PORT				GPIOA
-#define EYE_1_LED				GPIO_PIN_2
-#define EYE_2_GPIO_PORT				GPIOC
-#define EYE_2_LED				GPIO_PIN_3
+#define SHIELD_STAT_LED													GPIO_PIN_14
+#define SHIELD_STAT_GPIO_PORT										GPIOB
+#define EYE_1_GPIO_PORT													GPIOA
+#define EYE_1_LED																GPIO_PIN_2
+#define EYE_2_GPIO_PORT													GPIOC
+#define EYE_2_LED																GPIO_PIN_3
 
 #define I2C_TIMEOUT 1000
 
@@ -61,7 +61,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 CAN_HandleTypeDef hcan1;
 
 I2C_HandleTypeDef hi2c1;

@@ -168,6 +168,7 @@ def main():
             servo_pos[serial_packet[0]] = bytes2pos(serial_packet[1:3])                                 # update servo data in index indicated by packet
             sea_data[serial_packet[0]] = bytes2ang(serial_packet[3:5])                                  # update SEA data in index indicated by packet
 
+            # useful for checking if SEA data is rubbish or not
             # if(serial_packet[0] == 5):
             #     print(serial_packet)
 
