@@ -13,6 +13,7 @@ import serial
 import serial.tools.list_ports
 import numpy as np
 import time
+import csv
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -23,11 +24,11 @@ DATA_SIZE = 2                                                                   
 SERIAL_PACKET_SIZE = 2 * DATA_SIZE + 1                                              # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 20                                                                   # frequency of commands (Hz)
+COMMAND_FREQ = 15                                                                   # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
-A = np.pi/6                                                                         # sine amplitude
-omega = np.pi                                                                       # temporal freq.
+A = np.pi/4                                                                         # sine amplitude
+omega = np.pi * 5/12                                                                # temporal freq.
 phi = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
 
 K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
@@ -36,7 +37,7 @@ K_AI = (K - K_D) / (K * K_D)                                                    
 
 ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
 ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
-
+JOINT_DATA_ID = 3                                                                   # joint to have servo and SEA data saved
 #------------------------------------------------------------------------------------------------------------
 
 # sniff for devices
@@ -114,10 +115,14 @@ def bytes2pos(pos_data_packet):
 # convert SEA encoder data from bytes to angle (radians)
 def bytes2ang(sea_data_packet):
     sea_raw = (sea_data_packet[1] << 8) | sea_data_packet[0]
-    calibrated_angle = (sea_raw * 2 * np.pi) / 4095
-    if (calibrated_angle > np.pi):
-        calibrated_angle -= 2*np.pi
-    return calibrated_angle
+    converted_angle = (sea_raw * 2 * np.pi) / 4095
+    if (converted_angle > np.pi):
+        curated_angle = converted_angle - 2*np.pi
+    else:
+        curated_angle = converted_angle
+    if (curated_angle > np.deg2rad(30)):
+        curated_angle = 0
+    return curated_angle
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -128,7 +133,11 @@ def main():
     sea_data = np.zeros(N_JOINTS)
     servo_pos = np.zeros(N_JOINTS)
     desired_pos = np.zeros(N_JOINTS) 
-    desired_pos_fb = np.zeros(N_JOINTS)                                
+    desired_pos_fb = np.zeros(N_JOINTS)  
+
+    # data storage arrays
+    joint_data = [0, 0, 0]
+    header = ['time (s)', 'servo data (rad)', 'SEA data (rad)']                              
 
     ser = sniff()                                                  
 
@@ -159,16 +168,24 @@ def main():
             servo_pos[serial_packet[0]] = bytes2pos(serial_packet[1:3])                                 # update servo data in index indicated by packet
             sea_data[serial_packet[0]] = bytes2ang(serial_packet[3:5])                                  # update SEA data in index indicated by packet
 
+            # if(serial_packet[0] == 5):
+            #     print(serial_packet)
+
+            if (serial_packet[0] == JOINT_DATA_ID):
+                joint_data = np.vstack([joint_data, ([current_time - start_time, servo_pos[JOINT_DATA_ID], sea_data[JOINT_DATA_ID]])])
+
             # ..CONTROL
 
             if (round((current_time - prev_command_time), 3) >= COMMAND_PERIOD):                        # check if command period has passed since last command                                       
                 desired_pos = gpg(round((current_time - start_time), 3), N_JOINTS)                      # calculate desired pose command using GPG for current time (in seconds)
+                # desired_pos = np.zeros(8)
                 prev_command_time = current_time                                                        # update time of previous command
-                print(" t =", int((current_time - start_time) / 60), "min", round((current_time - start_time)  % 60, 3), "sec")
 
-            desired_pos_fb = desired_pos - sea_data*K*K_AI                                              # addition for admittance, subtraction for impedance
+                # print the time stamp
+                print("t =", int((current_time - start_time) / 60), "min", round((current_time - start_time)  % 60, 3), "sec")
 
-            # soft limit of +/- 50 deg
+            # apply torque feedback and soft limit
+            desired_pos_fb = desired_pos + sea_data*K*K_AI                                              # addition for admittance, subtraction for impedance
             for idx, x in np.ndenumerate(desired_pos_fb):
                 if (x > ROM_P):
                     desired_pos_fb[idx] = ROM_P
@@ -176,6 +193,17 @@ def main():
                     desired_pos_fb[idx] = ROM_M
                 else:
                     continue
+
+            # if sampling duration has elapsed, save the data and end program
+            if (current_time - start_time >= 5):
+                with open('C:/Users/gal65/masters/STM32_snake/local_stiffness/data/' + str(round(current_time, 0)) + '_joint_' + str(JOINT_DATA_ID) + '_data.csv', 'w', newline='') as f:
+                    print("saving data...")
+                    writer = csv.writer(f)
+                    writer.writerow(header)
+                    writer.writerows(joint_data)
+                    print("data for joint", JOINT_DATA_ID, "saved")
+                    ser.close()
+                    exit()
 
             send_command(ser, pos2bytes(np.rad2deg(desired_pos_fb)))                                    # send command to STM32 over serial
 
