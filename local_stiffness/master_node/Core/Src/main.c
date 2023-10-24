@@ -271,7 +271,7 @@ int main(void)
   		// send rest over CAN, one by one
   		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
   		{
-  			HAL_Delay(8); // small delay so CAN mailbox does not get full
+  			HAL_Delay(10); // small delay so CAN mailbox does not get full
   			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
 				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
 				{
