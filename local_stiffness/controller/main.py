@@ -33,7 +33,7 @@ COMMAND_PERIOD = 1/COMMAND_FREQ                                                 
 
 A = np.pi/8                                                                         # sine amplitude
 omega = np.pi                                                                       # temporal freq.
-phi = -2*np.pi/4 #((-2*np.pi)-0.4)/5                                                            # spatial freq.
+phi = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
 
 K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
 K_D = 0.3*K                                                                         # admittance/impedance constant
