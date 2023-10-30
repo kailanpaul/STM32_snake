@@ -36,7 +36,7 @@ omega = np.pi                                                                   
 phi = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
 
 K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
-K_D = 0.3*K                                                                         # admittance/impedance constant
+K_D = 0.65*K                                                                         # admittance/impedance constant
 K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
 ROM_P = np.deg2rad(52)                                                              # range of motion positive limit
@@ -226,8 +226,8 @@ def main():
                     continue
 
             # if sampling duration has elapsed, save the data and end program
-            if (current_time - start_time >= 45):
-                csvfile = 'C:/Users/gal65/masters/STM32_snake/local_stiffness/data/' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
+            if (current_time - start_time >= 80):
+                csvfile = 'C:/Users/gordo/Documents/masters/STM32_snake/local_stiffness/data/' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
                 with open(csvfile, 'w', newline='') as f:
                     print("saving data...")
                     writer = csv.writer(f)
