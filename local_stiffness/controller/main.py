@@ -28,21 +28,21 @@ DATA_SIZE = 2                                                                   
 SERIAL_PACKET_SIZE = 2 * DATA_SIZE + 1                                              # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 20                                                                   # frequency of commands (Hz)
+COMMAND_FREQ = 15                                                                   # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
-A = np.pi/8                                                                         # sine amplitude
-omega = np.pi                                                                       # temporal freq.
-phi = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
+A = np.pi/5                                                                         # sine amplitude
+OMEGA = 7*np.pi/12                                                                       # temporal freq.
+PHI = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
 
 K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
-K_D = 0.65*K                                                                         # admittance/impedance constant
-K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
+# K_D = 0.65*K                                                                        # admittance/impedance constant
+# K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
-ROM_P = np.deg2rad(52)                                                              # range of motion positive limit
-ROM_M = -np.deg2rad(53)                                                             # range of motion negative limit
-JOINT_DATA_ID = 6                                                                   # joint to have servo and SEA data saved
-TORQUE_CONTROL_MODE = 2                                                             # 1 for admittance, 2 for impedance
+ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
+ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
+JOINT_DATA_ID = 3                                                                   # joint to have servo and SEA data saved
+TORQUE_CONTROL_MODE = 1                                                             # 1 for admittance, 2 for impedance
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ def gpg(time, n):
 
     # get points on sine wave for n links
     for i in range(1, (n+3)):
-        points_i = A*np.sin(time*omega + phi*(i-1))
+        points_i = A*np.sin(time*OMEGA + PHI*(i-1))
         points[i-1] = points_i
 
     # get gradients of links
@@ -142,8 +142,8 @@ def main():
     desired_pos_fb = np.zeros(N_JOINTS)  
 
     # data storage arrays
-    joint_data = [0, 0, 0]
-    header = ['time (s)', 'servo data (rad)', 'SEA data (rad)']                              
+    joint_data = [0, 0, 0, 0, 0]
+    header = ['time', 'servo data', 'SEA data', 'GPG position', 'LSC position']                              
 
     ser = sniff()                                                  
 
@@ -154,9 +154,9 @@ def main():
     time.sleep(1) 
     ser.open()
 
-    send_command(ser, pos2bytes(np.rad2deg(gpg(0, 8))))
+    send_command(ser, pos2bytes(np.rad2deg(gpg(0.2, 8))))
 
-    time.sleep(1)
+    # time.sleep(1)
 
     start_time = time.time()                                                                           
     prev_command_time = time.time()   
@@ -183,11 +183,16 @@ def main():
             #     print(serial_packet)
 
             if (serial_packet[0] == JOINT_DATA_ID):
-                joint_data = np.vstack([joint_data, ([current_time - start_time, servo_pos[JOINT_DATA_ID], sea_data[JOINT_DATA_ID]])])
+                joint_data = np.vstack([joint_data, ([current_time - start_time,
+                                                      servo_pos[JOINT_DATA_ID],
+                                                      sea_data[JOINT_DATA_ID],
+                                                      desired_pos[5],
+                                                      desired_pos_fb[5]
+                                                      ])])
 
             # ..CONTROL
 
-            if (round((current_time - prev_command_time), 3) >= COMMAND_PERIOD):                        # check if command period has passed since last command                                       
+            if (current_time - prev_command_time) >= COMMAND_PERIOD:                        # check if command period has passed since last command                                       
                 desired_pos = gpg(round((current_time - start_time), 3), N_JOINTS)                      # calculate desired pose command using GPG for current time (in seconds)
                 # desired_pos = np.zeros(8)
                 prev_command_time = current_time                                                        # update time of previous command
@@ -195,15 +200,16 @@ def main():
                 # print the time stamp
                 print("t =", int((current_time - start_time) / 60), "min", round((current_time - start_time)  % 60, 3), "sec")
 
+
             # apply torque feedback and soft limit
 
             #-----------------------------------------------------------------------------------------------------------------------------------------------
-            # if ((current_time - start_time) < 10):
-            #     K_AI = 0
-            # elif ((current_time - start_time) < 20):
-            #     K_AI = (K - 0.65*K) / (K * 0.65*K)
-            # else:
-            #     K_AI = (K - 0.3*K) / (K * 0.3*K)  
+            if ((current_time - start_time) < 10):
+                K_AI = 0
+            elif ((current_time - start_time) < 20):
+                K_AI = (K - 0.666*K) / (K * 0.666*K)
+            else:
+                K_AI = (K - 0.5*K) / (K * 0.5*K)  
 
             # admittance
             if (TORQUE_CONTROL_MODE == 1):
@@ -225,9 +231,11 @@ def main():
                 else:
                     continue
 
+            # print(desired_pos_fb)
+
             # if sampling duration has elapsed, save the data and end program
-            if (current_time - start_time >= 80):
-                csvfile = 'C:/Users/gordo/Documents/masters/STM32_snake/local_stiffness/data/' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
+            if (current_time - start_time >= 30):
+                csvfile = 'C:/Users/gal65/masters/STM32_snake/local_stiffness/data/' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
                 with open(csvfile, 'w', newline='') as f:
                     print("saving data...")
                     writer = csv.writer(f)
@@ -246,9 +254,9 @@ def main():
                     print("saved")
 
                     if (TORQUE_CONTROL_MODE == 1):
-                        print("joint", JOINT_DATA_ID, "admittance with torque gain", K_AI)                                         
+                        print("joint", JOINT_DATA_ID, "admittance with torque gain", K_AI*K)                                         
                     elif (TORQUE_CONTROL_MODE == 2):
-                        print("joint", JOINT_DATA_ID, "impedance with torque gain", K_AI)
+                        print("joint", JOINT_DATA_ID, "impedance with torque gain", K_AI*K)
                     else:
                         print("joint", JOINT_DATA_ID, "with no torque gain")
                     ser.close()
