@@ -31,18 +31,20 @@ SERIAL_DECODE_MASK = 0x80                                                       
 COMMAND_FREQ = 15                                                                   # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
-A = np.pi/5                                                                         # sine amplitude
-OMEGA = 7*np.pi/12                                                                       # temporal freq.
-PHI = ((-2*np.pi)-0.4)/5                                                            # spatial freq.
+A = np.pi/8                                                                         # sine amplitude
+OMEGA = np.pi                                                                       # temporal freq.
+PHI = ((-2*np.pi-0.4))/5                                                            # spatial freq.
 
-K = 3.38                                                                            # torsional stiffness constant of SEE (Nm/rad)
-# K_D = 0.65*K                                                                        # admittance/impedance constant
-# K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
+K = 3.54                                                                            # torsional stiffness constant of SEE (Nm/rad)
+K_D = 0.5*K                                                                        # admittance/impedance constant
+K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
 ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
 ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
-JOINT_DATA_ID = 3                                                                   # joint to have servo and SEA data saved
-TORQUE_CONTROL_MODE = 1                                                             # 1 for admittance, 2 for impedance
+JOINT_DATA_ID = 6                                                                   # joint to have servo and SEA data saved
+TORQUE_CONTROL_MODE = 2                                                             # 1 for admittance, 2 for impedance
+
+RUN_TIME = 45
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -142,8 +144,8 @@ def main():
     desired_pos_fb = np.zeros(N_JOINTS)  
 
     # data storage arrays
-    joint_data = [0, 0, 0, 0, 0]
-    header = ['time', 'servo data', 'SEA data', 'GPG position', 'LSC position']                              
+    joint_data = [0, 0, 0]
+    header = ['time', 'servo data', 'SEA data']                              
 
     ser = sniff()                                                  
 
@@ -185,9 +187,7 @@ def main():
             if (serial_packet[0] == JOINT_DATA_ID):
                 joint_data = np.vstack([joint_data, ([current_time - start_time,
                                                       servo_pos[JOINT_DATA_ID],
-                                                      sea_data[JOINT_DATA_ID],
-                                                      desired_pos[5],
-                                                      desired_pos_fb[5]
+                                                      sea_data[JOINT_DATA_ID]
                                                       ])])
 
             # ..CONTROL
@@ -204,12 +204,12 @@ def main():
             # apply torque feedback and soft limit
 
             #-----------------------------------------------------------------------------------------------------------------------------------------------
-            if ((current_time - start_time) < 10):
-                K_AI = 0
-            elif ((current_time - start_time) < 20):
-                K_AI = (K - 0.666*K) / (K * 0.666*K)
-            else:
-                K_AI = (K - 0.5*K) / (K * 0.5*K)  
+            # if ((current_time - start_time) < 10):
+            #     K_AI = 0
+            # elif ((current_time - start_time) < 20):
+            #     K_AI = (K - 0.666*K) / (K * 0.666*K)
+            # else:
+            #     K_AI = (K - 0.5*K) / (K * 0.5*K)  
 
             # admittance
             if (TORQUE_CONTROL_MODE == 1):
@@ -234,8 +234,8 @@ def main():
             # print(desired_pos_fb)
 
             # if sampling duration has elapsed, save the data and end program
-            if (current_time - start_time >= 30):
-                csvfile = 'C:/Users/gal65/masters/STM32_snake/local_stiffness/data/' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
+            if (current_time - start_time >= RUN_TIME):
+                csvfile = 'C:/Users/gordo/OneDrive - University of Canterbury/Masters/data' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
                 with open(csvfile, 'w', newline='') as f:
                     print("saving data...")
                     writer = csv.writer(f)
