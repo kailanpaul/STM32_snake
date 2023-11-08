@@ -8,7 +8,7 @@ plt.rcParams['animation.ffmpeg_path'] = r'C:\Users\gal65\FFMpeg\bin\ffmpeg'
 # Define constants
 A = np.pi/6
 omega = np.pi
-phi = -4.0144/9 * np.pi
+phi = (-2 * np.pi - 0.4)/5
 fig = plt.figure()
 dt = 0.1 
 t_max = 10
@@ -25,7 +25,8 @@ axis = plt.axes(xlim =(0, 13),
                 ylim =(-1, 1))
  
 # initializing a line variable
-line, = axis.plot([], [], lw = 3)
+mark = list(np.array([1,2,3,4,5,6,7,8,9,10,11,12]))
+line, = axis.plot([], [], markevery=mark, marker="o", lw = 3)
  
 # data which the line will
 # contain (x, y)
@@ -47,7 +48,7 @@ ani = FuncAnimation(fig, animate, init_func=init, frames=100,
                 interval=500, repeat=False)
 
 FFwriter = FFMpegWriter(fps=10, extra_args=['-vcodec', 'libx264'])
-ani.save('snakey.mp4', writer=FFwriter)
+ani.save('none.mp4', writer=FFwriter)
 
 #------------------------------------------------------------------------------------------------------------
 # simulation parameters
