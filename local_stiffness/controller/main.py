@@ -235,7 +235,7 @@ def main():
 
             # if sampling duration has elapsed, save the data and end program
             if (current_time - start_time >= RUN_TIME):
-                csvfile = 'C:/Users/gordo/OneDrive - University of Canterbury/Masters/data' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI, 2)) + '_data.csv'
+                csvfile = 'C:/Users/gordo/OneDrive - University of Canterbury/Masters/data' + str(int(round(current_time, 0))) + '_' + 'joint_' + str(JOINT_DATA_ID) + '_' + str(TORQUE_CONTROL_MODE) + '_' + str(round(K_AI*K, 2)) + '_data.csv'
                 with open(csvfile, 'w', newline='') as f:
                     print("saving data...")
                     writer = csv.writer(f)
