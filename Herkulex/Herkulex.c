@@ -1,3 +1,14 @@
+/*
+ Herkulex.c - Library for Herkulex DRS-0101/DRS-0201
+ Created by Kailan Paul on 31/05/2023
+ Ported from original libraries by Alessandro Giacomel for Arduino
+ 
+ *****************************************************************************
+    Herkulex Servo Manual: http://hovis.co.kr/guide/herkulex/drs-0101/%5BENG%5D%20Herkulex%20Manual_20140218.pdf
+ *****************************************************************************
+
+  This library was developed for use with an STM32F405 development board and uses the stm32f4xx HAL library.
+*/
 #include "Herkulex.h"
 #include "main.h"
 #include "stm32f4xx_hal.h"
@@ -16,8 +27,8 @@ HAL_StatusTypeDef send_data(uint8_t cmd, uint8_t servo_ID, uint8_t *data,
 		uint8_t data_size);
 HAL_StatusTypeDef read_data(uint8_t *buffer, uint8_t size);
 
+//initialise all connected servos
 void herkulex_init(void) {
-	//	uint8_t count = 0;
 	HAL_Delay(100);
 	clear_error(BROADCAST_ID); // clear error for all servos
 	HAL_Delay(10);
@@ -34,64 +45,69 @@ void reboot(uint8_t servo_ID) {
 	send_data(H_REBOOT, servo_ID, data, sizeof(data));
 }
 
+// clear errors on the specified servo
 void clear_error(uint8_t servo_ID) {
 	uint8_t data[4];
-	data[0] = 0x30; // 8. Address
-	data[1] = 0x02; // 9. Length
-	data[2] = 0x00; // 10. Write error=0
-	data[3] = 0x00; // 10. Write detail error=0
+	data[0] = 0x30; // Address
+	data[1] = 0x02; // Length
+	data[2] = 0x00; // Write error=0
+	data[3] = 0x00; // Write detail error=0
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
 
+// start up the motor on the specified servo
 void torque_on(uint8_t servo_ID) {
 	uint8_t data[3];
-	data[0] = 0x34; // 8. Address
-	data[1] = 0x01; // 9. Lenght
-	data[2] = 0x60; // 10. 0x60=Torque ON
+	data[0] = 0x34; // Address
+	data[1] = 0x01; // Length
+	data[2] = 0x60; // Torque ON
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
 
+// turn off the motor on the specified servo
 void torque_off(uint8_t servo_ID) {
 	uint8_t data[3];
-	data[0] = 0x34; // 8. Address
-	data[1] = 0x01; // 9. Lenght
-	data[2] = 0x00; // 10. 0x00=Torque Off
+	data[0] = 0x34; // Address
+	data[1] = 0x01; // Length
+	data[2] = 0x00; // Torque Off
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
 
+// set the servo LED to the specified colour
 void set_LED(uint8_t servo_ID, uint8_t LED_val) {
 	uint8_t data[3];
-	data[0] = 0x35;	   // 8. Address 53
-	data[1] = 0x01;	   // 9. Lenght
-	data[2] = LED_val; // 10.LedValue
+	data[0] = 0x35;	   // Address
+	data[1] = 0x01;	   // Length
+	data[2] = LED_val; // LED value
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
 
-// setID - Need to restart the servo
+// set the servo ID - must restart servo to take effect
 void set_ID(uint8_t ID_old, uint8_t ID_new) {
 	uint8_t data[3];
-	data[0] = 0x06;	  // 8. Address
-	data[1] = 0x01;	  // 9. Lenght
-	data[2] = ID_new; // 10. ServoID NEW
+	data[0] = 0x06;	  // Address
+	data[1] = 0x01;	  // Length
+	data[2] = ID_new; // New ID
 
 	send_data(H_EEP_WRITE, ID_old, data, sizeof(data));
 }
 
+// move continuously
 void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED) {
 	uint8_t data[5];
 	data[0] = 0; // redundant
 
 	if (speed > 1023 || speed < -1023)
-		return; // speed (goal) non correct
+		return; // error
 
 	uint16_t goal_speed;
 	if (speed < 0) {
 		goal_speed = (-1) * speed;
-		goal_speed |= 0x4000; // bit n�14
+		goal_speed |= 0x4000; // bit no. 14
 	} else {
 		goal_speed = speed;
 	}
@@ -116,11 +132,12 @@ void move_continuous(uint8_t servo_ID, int speed, uint8_t i_LED) {
 		break;
 	}
 
-	data[4] = servo_ID; // 11. ServoID
+	data[4] = servo_ID;
 
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
+// move to specified position 0 - 1023
 void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
 		uint8_t i_LED) {
 	uint8_t data[5];
@@ -157,12 +174,15 @@ void move_positional(uint8_t servo_ID, int position, uint16_t p_time,
 	send_data(H_SJOG, servo_ID, data, sizeof(data));
 }
 
+// move to specified angle 160.0 -160.0
 void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED) {
 	if (angle > 160.0 || angle < -160.0)
 		return;
 	int position = (int) (angle / 0.325) + 512;
 	move_positional(servo_ID, position, p_time, i_LED);
 }
+
+//######################################## UNFINISHED ########################################
 
 // move all servo at the same time to a position: servo list building
 // void move_all_angle(uint8_t servo_ID, float angle, uint8_t i_LED)
@@ -251,6 +271,8 @@ void move_angle(uint8_t servo_ID, float angle, uint16_t p_time, uint8_t i_LED) {
 //	count = 0; // reset counter
 //}
 
+//############################################################################################
+
 //returns the status of the servo
 uint8_t get_status(uint8_t servo_ID) {
 	uint8_t data[0];
@@ -262,13 +284,13 @@ uint8_t get_status(uint8_t servo_ID) {
 	return r_data[0];
 }
 
-// get Position
+// get position
 uint16_t get_position(uint8_t servo_ID) {
 	uint16_t position = 0;
 
 	uint8_t data[2];
-	data[0] = 0x3A; // 8. Address
-	data[1] = 0x02; // 9. Lenght
+	data[0] = 0x3A; // Address
+	data[1] = 0x02; // Length
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
@@ -285,13 +307,13 @@ float get_angle(uint8_t servo_ID) {
 	return (pos - 512) * 0.325;
 }
 
-// get the speed for one servo - values betweeb -1023 <--> 1023
+// get the speed for one servo -1023 - 1023
 uint16_t get_speed(uint8_t servo_ID) {
 	uint16_t speed = 0;
 
 	uint8_t data[2];
-	data[0] = 0x40; // 8. Address
-	data[1] = 0x02; // 9. Lenght
+	data[0] = 0x40; // Address
+	data[1] = 0x02; // Length
 
 	send_data(H_RAM_READ, servo_ID, data, sizeof(data));
 
@@ -320,9 +342,9 @@ uint8_t checksum2(uint8_t XOR) {
 // ACK  - 0=No reply, 1=Only reply to READ CMD, 2=Always reply
 void set_ACK(uint8_t servo_ID, uint8_t val) {
 	uint8_t data[3];
-	data[0] = 0x34; // 8. Address
-	data[1] = 0x01; // 9. Lenght
-	data[2] = val;// 10.Value. 0=No Replay, 1=Only reply to READ CMD, 2=Always reply
+	data[0] = 0x34; // Address
+	data[1] = 0x01; // Length
+	data[2] = val;
 
 	send_data(H_RAM_WRITE, servo_ID, data, sizeof(data));
 }
@@ -331,9 +353,9 @@ void set_ACK(uint8_t servo_ID, uint8_t val) {
 void write_register(uint8_t memory, uint8_t servo_ID, uint8_t address,
 		uint8_t write_byte) {
 	uint8_t data[3];
-	data[0] = address;	  // 8. Address
-	data[1] = 0x01;		  // 9. Lenght
-	data[2] = write_byte; // 10. Write error=0
+	data[0] = address;	  // Address
+	data[1] = 0x01;		  // Length
+	data[2] = write_byte; // Write error=0
 
 	send_data(memory, servo_ID, data, sizeof(data));
 }

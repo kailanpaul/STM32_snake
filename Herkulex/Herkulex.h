@@ -1,3 +1,14 @@
+/*
+ Herkulex.h - Library for Herkulex DRS-0101/DRS-0201
+ Created by Kailan Paul on 31/05/2023
+ Ported from original libraries by Alessandro Giacomel for Arduino
+
+ *****************************************************************************
+    Herkulex Servo Manual: http://hovis.co.kr/guide/herkulex/drs-0101/%5BENG%5D%20Herkulex%20Manual_20140218.pdf
+ *****************************************************************************
+
+  This library was developed for use with an STM32F405 development board and uses the stm32f4xx HAL library.
+*/
 #ifndef Herkulex_h
 #define Herkulex_h
 
