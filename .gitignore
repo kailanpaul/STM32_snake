@@ -16,3 +16,4 @@ cube_workspace.code-workspace
 **/*.a
 **/*.bin
 **/*.dblite
+**/.pio/

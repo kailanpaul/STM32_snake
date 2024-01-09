@@ -27,7 +27,7 @@ void herkulex_init(void) {
 	HAL_Delay(10);
 }
 
-// reboot single servo - pay attention 253 - all servos doesn't work!
+// reboot single servo
 void reboot(uint8_t servo_ID) {
 	uint8_t data[0];
 
