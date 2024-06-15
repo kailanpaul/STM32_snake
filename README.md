@@ -9,6 +9,7 @@ Likewise, feedback (to perform the local stiffness control) from each node is se
 $ Branches
 
 master: working, centralised LSC
+
 centralised: centralised LSC working branch (may not be clean)
-decentralised: decentralised LSC working branch
+
 pi: working branch for incorporating Raspberry Pi for wireless centralised control
