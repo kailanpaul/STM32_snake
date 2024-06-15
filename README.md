@@ -6,7 +6,7 @@ The master node distributes commands to the respective slave nodes over CAN bus.
 
 Likewise, feedback (to perform the local stiffness control) from each node is sent firstly to the master node over CAN, and then to the central controller over USB. 
 
-$ Branches
+# Branches
 
 master: working, centralised LSC
 
