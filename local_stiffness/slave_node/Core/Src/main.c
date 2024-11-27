@@ -46,7 +46,7 @@
 #define MASTER_CAN_ID 0x30
 
 //---------------------------------------------------------------------------------
-#define N_JOINTS 8 // IMPORTANT
+#define N_JOINTS 12 // IMPORTANT
 //---------------------------------------------------------------------------------
 
 #define SEA_DATA_SIZE 2
@@ -170,7 +170,7 @@ int main(void)
 	txHeader.RTR = CAN_RTR_DATA;
 
 	//---------------------------------------------------------------------------------
-	txHeader.StdId = 0x07; // IMPORTANT
+	txHeader.StdId = 0x0B; // IMPORTANT
 	//---------------------------------------------------------------------------------
 
 	txHeader.ExtId = 0x02;
@@ -221,15 +221,15 @@ int main(void)
   	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_SET);
 
   	// eye code
-  	if (txHeader.StdId == N_JOINTS-1)
-  	{
-  		HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_SET);
-  		HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_SET);
-  		HAL_Delay(rand() % (5000 - 200 + 1) + 200);
-  		HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_RESET);
-  		HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_RESET);
-  		HAL_Delay(100);
-  	}
+  	// if (txHeader.StdId == N_JOINTS-1)
+  	// {
+  	// 	HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_SET);
+  	// 	HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_SET);
+  	// 	HAL_Delay(rand() % (5000 - 200 + 1) + 200);
+  	// 	HAL_GPIO_WritePin(EYE_1_GPIO_PORT, EYE_1_LED, GPIO_PIN_RESET);
+  	// 	HAL_GPIO_WritePin(EYE_2_GPIO_PORT, EYE_2_LED, GPIO_PIN_RESET);
+  	// 	HAL_Delay(100);
+  	// }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
