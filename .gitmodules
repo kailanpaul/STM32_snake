@@ -1,6 +1,6 @@
 ﻿[submodule "local_stiffness/master_node/lib/STM32_Herkulex"]
 	path = local_stiffness/master_node/lib/STM32_Herkulex
-	url = https://github.com/kailanpaul/STM32_snake.git
+	url = https://github.com/kailanpaul/STM32_Herkulex
 [submodule "local_stiffness/slave_node/lib/STM32_Herkulex"]
 	path = local_stiffness/slave_node/lib/STM32_Herkulex
-	url = https://github.com/kailanpaul/STM32_snake.git
+	url = https://github.com/kailanpaul/STM32_Herkulex
