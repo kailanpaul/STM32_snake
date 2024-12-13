@@ -28,19 +28,23 @@ DATA_SIZE = 2                                                                   
 SERIAL_PACKET_SIZE = 2 * DATA_SIZE + 1                                              # total number of bytes in a serial packet
 SERIAL_DECODE_MASK = 0x80                                                           # decode serial data encoded on STM32 side
 
-COMMAND_FREQ = 20                                                                   # frequency of commands (Hz)
+COMMAND_FREQ = 15                                                                  # frequency of commands (Hz)
 COMMAND_PERIOD = 1/COMMAND_FREQ                                                     # time between commands in seconds
 
-A = np.pi/8                                                                         # sine amplitude
-OMEGA = np.pi                                                                       # temporal freq.
-PHI = ((-2*np.pi-0.4))/5                                                            # spatial freq.
+# A = np.pi/8                                                                         # sine amplitude
+# OMEGA = np.pi                                                                       # temporal freq.
+# PHI = ((-2*np.pi-0.4))/5                                                            # spatial freq.
+
+A = 0.4                                                                         # sine amplitude
+OMEGA = 1.5*np.pi                                                                       # temporal freq.
+PHI = 1                                                                         # spatial freq.
 
 K = 3.54                                                                            # torsional stiffness constant of SEE (Nm/rad)
 K_D = 0.5*K                                                                        # admittance/impedance constant
 K_AI = (K - K_D) / (K * K_D)                                                        # admittance/impedance gain
 
-ROM_P = np.deg2rad(50)                                                              # range of motion positive limit
-ROM_M = -np.deg2rad(50)                                                             # range of motion negative limit
+ROM_P = np.deg2rad(49)                                                              # range of motion positive limit
+ROM_M = -np.deg2rad(49)                                                             # range of motion negative limit
 JOINT_DATA_ID = 6                                                                   # joint to have servo and SEA data saved
 TORQUE_CONTROL_MODE = 2                                                             # 1 for admittance, 2 for impedance
 
@@ -76,30 +80,33 @@ def sniff():
             continue
 
 # gait pattern generator: generates joint angles (rad) for 'n' joints, to achieve pose corresponding to time step
-# approximates a sine wave
+# approximates two sine waves
 def gpg(time, n):
-
+    n2 = int(n/2)
     # initialise empty arrays to store link end points and desired joint angles
-    points = np.zeros(n+2)
+    points_v = np.zeros(n2+2) # vertical wave
+    points_h = np.zeros(n2+2) # horizontal wave
     desired_pos = np.zeros(n)
 
     # get points on sine wave for n links
-    for i in range(1, (n+3)):
-        if i%2:
-            points_i = A*np.sin(time*OMEGA + PHI*(i-1))
-        else:
-            points_i = 0*(A/4)*np.sin(time*OMEGA + PHI*(i-1)-np.pi/2) #not sure if pi or -pi
-        # points[i-1] = points_i
-        points[n-i+2] = points_i
-
+    for i in range(1, (n2+3)):
+        points_v[n2-i+2] = A*np.sin(time*OMEGA + PHI*(i-1))
+        points_h[n2-i+2] = 2*A*np.sin(time*OMEGA + PHI*(i-1)-np.pi/2)
+    # print(points_v)
+    # print(points_h)
     # get gradients of links
-    m = np.zeros(n+1)
-    for l in range(0, len(points)-1):
-        m[l] = points[l+1]-points[l]
+    m_v = np.zeros(n2+1)
+    m_h = np.zeros(n2+1)
+    for l in range(0, n2+1):
+        m_v[l] = points_v[l+1]-points_v[l]
+        m_h[l] = points_h[l+1]-points_h[l]
 
     # get desired joint angles in radians from link gradients using trig identity
-    for k in range(0, len(m)-1):
-        desired_pos[k] = np.arctan(m[k+1]-m[k])/(1 + m[k+1]*m[k])
+    # assumes first node is vertical
+    for k in range(0, n2):
+        j = 2*k
+        desired_pos[j] = np.arctan(m_v[k+1]-m_v[k])/(1 + m_v[k+1]*m_v[k])
+        desired_pos[j+1] = np.arctan(m_h[k+1]-m_h[k])/(1 + m_h[k+1]*m_h[k])
     
     # return joint angles in radians
     return desired_pos
@@ -135,6 +142,125 @@ def bytes2ang(sea_data_packet):
     if (curated_angle > np.deg2rad(30)):
         curated_angle = 0
     return curated_angle
+
+def pos2bytes2(pose):
+    bytes_array = [0] * (int(len(pose)/2+1))
+    pose += 50
+    pose *= (15/100)
+    bytes_array[0] = round(pose[0])
+    for i in range(1, int(len(pose)/2+1)):
+        left = round(pose[2*i-1])<<4
+        if((2*i) == N_JOINTS):
+            right = 0
+        else:
+            right = round(pose[2*i])
+        bytes_array[i] = left | right
+    return bytes_array
+
+def test():
+
+    # initialize variables
+
+    sea_data = np.zeros(N_JOINTS)
+    servo_pos = np.zeros(N_JOINTS)
+    desired_pos = np.zeros(N_JOINTS) 
+    desired_pos_fb = np.zeros(N_JOINTS)  
+
+    # data storage arrays
+    joint_data = [0, 0, 0]
+    header = ['time', 'servo data', 'SEA data']                              
+                                               
+
+    print("PlEAsE wAiT")
+
+    # wait for servo to init and zero
+
+    # time.sleep(1)
+
+    start_time = time.time()                                                                           
+    prev_command_time = time.time()   
+
+    time.sleep(0.1)
+
+    print("Start")
+
+    while (1):
+
+        current_time = time.time()                                                    
+
+        if (current_time - prev_command_time) >= COMMAND_PERIOD:                        # check if command period has passed since last command                                       
+            desired_pos = gpg(round((current_time - start_time), 3), N_JOINTS)                      # calculate desired pose command using GPG for current time (in seconds)
+            # desired_pos = np.zeros(8)
+            prev_command_time = current_time                                                        # update time of previous command
+
+            # print the time stamp
+            print("t =", int((current_time - start_time) / 60), "min", round((current_time - start_time)  % 60, 3), "sec")
+
+        # admittance
+        if (TORQUE_CONTROL_MODE == 1):
+            desired_pos_fb = desired_pos + sea_data*K*K_AI 
+        #impedance                                             
+        elif (TORQUE_CONTROL_MODE == 2):
+            desired_pos_fb = desired_pos - sea_data*K*K_AI
+        else:
+            desired_pos_fb = desired_pos
+
+        for idx, x in np.ndenumerate(desired_pos_fb):
+            if (x > ROM_P):
+                desired_pos_fb[idx] = ROM_P
+            elif (x < ROM_M):
+                desired_pos_fb[idx] = ROM_M
+            else:
+                continue
+
+        # print(np.rad2deg(desired_pos_fb))
+        # print(pos2bytes(np.rad2deg(desired_pos_fb)))
+        results = pos2bytes2(np.rad2deg(desired_pos_fb))    # send command to STM32 over serial
+        table = {
+            0:-49,
+            1:-43.3,
+            2:-36.7,
+            3:-30,
+            4:-23.3,
+            5:-16.7,
+            6:-10,
+            7:-3.3,
+            8:3.3,
+            9:10,
+            10:16.7,
+            11:23.3,
+            12:30,
+            13:36.7,
+            14:43.3,
+            15:49,
+        }
+        l = []
+        f = 0
+        for result in results:
+            if (f):
+                left = (result & 0b11110000)>>4
+                right = result & 0b1111
+                l.append(table[left])
+                l.append(table[right])
+            else:
+                l.append(table[result])
+                f = 1
+        # print((int((pose[i] / 0.326) + 512)))
+        for i in range(len(desired_pos_fb)):
+            if (abs(np.rad2deg(desired_pos_fb[i]) - l[i]) > 3.5):
+                print("fail")
+        
+        for i in range(16):
+            print(round((table[i]/ 0.326) + 512))
+        # for srge in l:
+        #     print(round((srge/ 0.326) + 512))
+        # print(round((0/ 0.326) + 512))
+        break
+
+
+
+
+
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -265,8 +391,9 @@ def main():
             #             print("joint", JOINT_DATA_ID, "with no torque gain")
             #         ser.close()
             #         exit()
-
-            send_command(ser, pos2bytes(np.rad2deg(desired_pos_fb)))                                    # send command to STM32 over serial
+            send = pos2bytes2(np.rad2deg(desired_pos_fb))
+            print(send)
+            send_command(ser, send)                                    # send command to STM32 over serial
 
         except serial.serialutil.SerialException:
             print("Device lost :( Exiting...")
@@ -275,5 +402,7 @@ def main():
     ser.close()
       
 if __name__ == "__main__":
-    print(np.rad2deg(gpg(0.2, N_JOINTS)))
-    # main()                      
+    # print(pos2bytes(np.rad2deg(gpg(0.2, N_JOINTS))))
+    # print(pos2bytes2(np.rad2deg(gpg(0.2, N_JOINTS))))
+    main()                      
+    # test()

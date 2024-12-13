@@ -105,17 +105,10 @@ uint16_t right;
 uint8_t csend[(SEA_DATA_SIZE+POSITION_DATA_SIZE)]; // CAN Tx Buffer
 const uint8_t request_packet[] = {0xFF}; // request byte from master
 static int my_command = 0;
+int const nums[] = {362, 379, 399, 420, 441, 461, 481, 502, 522, 543, 563, 583, 604, 625, 645, 662};
 
-// reset and zero servo if error flag is raised
-void reset_and_zero_pos()
-{
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-		HAL_Delay(50);
-	}
-}
+uint32_t last_check;
+uint32_t check_period = 5000;
 
 /* USER CODE END 0 */
 
@@ -170,7 +163,7 @@ int main(void)
 	txHeader.RTR = CAN_RTR_DATA;
 
 	//---------------------------------------------------------------------------------
-	txHeader.StdId = 0x0B; // IMPORTANT
+	txHeader.StdId = 0x01; // IMPORTANT
 	//---------------------------------------------------------------------------------
 
 	txHeader.ExtId = 0x02;
@@ -195,24 +188,24 @@ int main(void)
 	HAL_Delay(2000);
 
 	// get encoder initial reading and use to calibrate
-	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		Error_Handler();
-	left = I2C_buffer[0];
-	if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		Error_Handler();
-	right = I2C_buffer[0];
+	// if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_L, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	// 	Error_Handler();
+	// left = I2C_buffer[0];
+	// if (HAL_I2C_Mem_Read(&hi2c2, encoder_address, RAW_ANGLE_R, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	// 	Error_Handler();
+	// right = I2C_buffer[0];
 
-	I2C_buffer[0] = left;
-	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		Error_Handler();
-	I2C_buffer[0] = right;
-	if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		Error_Handler();
-	HAL_Delay(50);
+	// I2C_buffer[0] = left;
+	// if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSL, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	// 	Error_Handler();
+	// I2C_buffer[0] = right;
+	// if (HAL_I2C_Mem_Write(&hi2c2, encoder_address, ZPOSR, 1, I2C_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	// 	Error_Handler();
+	// HAL_Delay(50);
 
 
   /* USER CODE END 2 */
-
+  last_check = HAL_GetTick();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -231,7 +224,15 @@ int main(void)
   	// 	HAL_Delay(100);
   	// }
     /* USER CODE END WHILE */
-
+    if((HAL_GetTick() - last_check) > check_period)
+    {
+      last_check = HAL_GetTick();
+      if(get_status(SERVO_ID)){
+        herkulex_init();
+      }
+      // herkulex_init();
+    }
+    // HAL_Delay(5000);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -514,7 +515,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
-	__disable_irq();
+	// __disable_irq();
 	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
 	{
 		Error_Handler();
@@ -524,15 +525,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 	// determine if it is my command or a request
 	if (rxHeader.StdId == MASTER_CAN_ID)
 	{
-		if (CAN_RX_buffer[0] == txHeader.StdId) // if command
-		{
-			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
-			// grab command and execute
-			my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
-			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
-		}
-		else if (CAN_RX_buffer[0] == request_packet[0]) // if state data request
+		if (CAN_RX_buffer[0] == request_packet[0]) // if state data request
 		{
 	  	// get position data (2 bytes each) and add to packet
 	  	get_position_bytes(SERVO_ID, position_data_array);
@@ -558,9 +551,23 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 			}
 
 			HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
+		} else {
+      // txHeader.StdId
+			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
+			// grab command and execute
+
+      if ((txHeader.StdId % 2) == 1) {
+        my_command = nums[(CAN_RX_buffer[(txHeader.StdId/2)]&0b11110000)>>4];
+      } else {
+        my_command = nums[(CAN_RX_buffer[(txHeader.StdId/2)-1]&0b1111)];
+      }
+
+			// my_command = ((CAN_RX_buffer[2] & 0x03) << 8) | CAN_RX_buffer[1];
+			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
+			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
 		}
-	}
-	__enable_irq();
+  }
+	// __enable_irq();
 }
 /* USER CODE END 4 */
 

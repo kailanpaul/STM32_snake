@@ -75,7 +75,7 @@ uint32_t canMailbox; // CAN Bus Mail box variable
 
 uint8_t encoder_address = 0b01101100; 	// left-shifted by 1 - not sure why :)
 uint8_t I2C_buffer[1];
-uint8_t usb_in[N_JOINTS * POSITION_DATA_SIZE];
+uint8_t usb_in[7];
 uint8_t usb_out[1 + (POSITION_DATA_SIZE + SEA_DATA_SIZE)];
 uint16_t packet_len = sizeof(usb_out) / sizeof(usb_out[0]);
 uint8_t position_data_array[2];
@@ -108,16 +108,10 @@ void Error_Handler(void);
 uint16_t left;
 uint16_t right;
 uint8_t csend[8]; // CAN Tx Buffer
+int const nums[] = {362, 379, 399, 420, 441, 461, 481, 502, 522, 543, 563, 583, 604, 625, 645, 662};
 
-void reset_and_zero_pos()
-{
-	if(get_status(SERVO_ID)) {
-		clear_error(SERVO_ID);
-		torque_on(SERVO_ID);
-		move_angle(SERVO_ID, 0, 0, H_LED_GREEN);
-		HAL_Delay(50);
-	}
-}
+uint32_t last_check;
+uint32_t check_period = 5000;
 
 /* USER CODE END 0 */
 
@@ -222,13 +216,15 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  last_check = HAL_GetTick();
+
   while (1)
   {
   	// shield status on during runtime
   	HAL_GPIO_WritePin(SHIELD_STAT_GPIO_PORT, SHIELD_STAT_LED, GPIO_PIN_SET);
 
   	// add own data
-  	__disable_irq();
+  	// __disable_irq();
 
   	// get position data (2 bytes each) and add to packet
   	get_position_bytes(SERVO_ID, position_data_array);
@@ -247,43 +243,57 @@ int main(void)
 
   	// send to PC
   	CDC_Transmit_FS(my_state_buffer, 5);
-  	__enable_irq();
+  	// __enable_irq();
 
   	// send request to other segments over CAN for their data
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_SET);
-		if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
-		{
-			Error_Handler();
-		}
+		// if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, request_packet, &canMailbox) != HAL_OK) // Send Message
+		// {
+		// 	Error_Handler();
+		// }
 		HAL_GPIO_WritePin(YELLOW_GPIO_PORT, YELLOW_LED, GPIO_PIN_RESET);
 
 		// receive data
-		HAL_Delay(10);
+		HAL_Delay(5);
+
+    if((HAL_GetTick() - last_check) > check_period)
+    {
+      last_check = HAL_GetTick();
+      if(get_status(SERVO_ID)){
+        herkulex_init();
+      }
+    }
 
 		// check if command is received and if so, execute it
   	if (usb_in[0] != 0 ) // i.e. if usb_in not empty
   	{
+      my_command = nums[usb_in[0]];
+
   		HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_SET);
 
-  		// grab own command
-  		my_command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
+  		// // grab own command
+  		// my_command = ((usb_in[1] & 0x03) << 8) | usb_in[0];
 
-  		// send rest over CAN, one by one
-  		for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
-  		{
-  			HAL_Delay(10); // small delay so CAN mailbox does not get full
-  			uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
-				if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
-				{
-					Error_Handler();
-				}
-  		}
-  		__disable_irq();
+  		// // // send rest over CAN, one by one
+  		// // for (i = 2; i < ((N_JOINTS*POSITION_DATA_SIZE)-1); i += 2)
+  		// // {
+  		// // 	HAL_Delay(10); // small delay so CAN mailbox does not get full
+  		// // 	uint8_t csend[] = {i/2, usb_in[i], usb_in[i+1]};
+			// // 	if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK) // send message
+			// // 	{
+			// // 		Error_Handler();
+			// // 	}
+  		// // }
+      uint8_t csend[] = {usb_in[1], usb_in[2], usb_in[3], usb_in[4], usb_in[5], usb_in[6]};
+      if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, csend, &canMailbox) != HAL_OK)
+        Error_Handler();
+      
+  		// __disable_irq();
 
-  		// execute own command
+  		// // execute own command
 			move_positional(SERVO_ID, my_command, 100, H_LED_WHITE);
-			__enable_irq();
-			memset(usb_in, '\0', sizeof usb_in);
+			// __enable_irq();
+			// memset(usb_in, '\0', 7);
 			HAL_GPIO_WritePin(BLUE_GPIO_PORT, BLUE_LED, GPIO_PIN_RESET);
   	}
 	/* USER CODE END WHILE */
@@ -557,7 +567,7 @@ static void MX_GPIO_Init(void)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 {
 
-	__disable_irq();
+	// __disable_irq();
 
 	int ii = 0;
 	if (HAL_CAN_GetRxMessage(hcan1, CAN_RX_FIFO0, &rxHeader, CAN_RX_buffer) != HAL_OK) // receive CAN bus message in CAN Rx buffer
@@ -575,7 +585,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan1)
 	// send joint state data to PC
 	CDC_Transmit_FS(usb_out, 5);
 
-	__enable_irq();
+	// __enable_irq();
 
 }
 /* USER CODE END 4 */
