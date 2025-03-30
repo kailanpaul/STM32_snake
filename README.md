@@ -13,3 +13,5 @@ master: working, centralised LSC
 centralised: centralised LSC working branch (may not be clean)
 
 pi: working branch for incorporating Raspberry Pi for wireless centralised control
+
+noodle: code developed for use with the robot Noodle
