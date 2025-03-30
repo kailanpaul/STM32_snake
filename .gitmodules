@@ -1,0 +1,6 @@
+[submodule "master_node/lib/STM32_Herkulex"]
+	path = master_node/lib/STM32_Herkulex
+	url = git@github.com:kailanpaul/STM32_Herkulex.git
+[submodule "slave_node/lib/STM32_Herkulex"]
+	path = slave_node/lib/STM32_Herkulex
+	url = git@github.com:kailanpaul/STM32_Herkulex.git
